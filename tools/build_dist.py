@@ -84,6 +84,7 @@ def build(out: Path, link_base: str) -> None:
     (out / "AGENTS.compact.md").write_text(compact, encoding="utf-8")
 
     for s in skills:
+        short = "core" if s.name == "secure-coding" else s.name.removeprefix("secure-")  # avoid secure-vibe-coding-secure-*
         act = ACTIVATION.get(s.name, {"always": False})
         body = bodies[s.name]
         always = act.get("always", False)
@@ -92,7 +93,7 @@ def build(out: Path, link_base: str) -> None:
 
         # Cursor .mdc
         fm = [f'description: "{desc}"', f"globs: {','.join(globs) if globs else ''}", f"alwaysApply: {'true' if always else 'false'}"]
-        write(out / ".cursor/rules" / f"secure-vibe-coding-{s.name}.mdc", "---\n" + "\n".join(fm) + "\n---\n" + HEADER + body + "\n")
+        write(out / ".cursor/rules" / f"secure-vibe-coding-{short}.mdc", "---\n" + "\n".join(fm) + "\n---\n" + HEADER + body + "\n")
 
         # Windsurf (6,000 chars per rule): core gets the compact card, other skills point at their SKILL.md
         trigger = "always_on" if always else ("glob" if globs else "model_decision")
@@ -100,17 +101,17 @@ def build(out: Path, link_base: str) -> None:
         fm = [f"trigger: {trigger}", f'description: "{wdesc}"'] + ([f"globs: {','.join(globs)}"] if globs else [])
         wbody = compact if always else (f"{HEADER}When this rule applies, read and follow `{link_base}skills/{s.name}/SKILL.md` "
                                         f"(and the reference files it links to) before writing code.\n\nScope: {s.description}\n")
-        write(out / ".windsurf/rules" / f"secure-vibe-coding-{s.name}.md", "---\n" + "\n".join(fm) + "\n---\n" + wbody)
+        write(out / ".windsurf/rules" / f"secure-vibe-coding-{short}.md", "---\n" + "\n".join(fm) + "\n---\n" + wbody)
 
         # Continue
         fm = [f"name: Secure Vibe Coding {s.name}", f'description: "{desc}"', f"alwaysApply: {'true' if always else 'false'}"]
         if globs:
             fm.append(f"globs: {yaml_list(globs)}")
-        write(out / ".continue/rules" / f"secure-vibe-coding-{s.name}.md", "---\n" + "\n".join(fm) + "\n---\n" + HEADER + body + "\n")
+        write(out / ".continue/rules" / f"secure-vibe-coding-{short}.md", "---\n" + "\n".join(fm) + "\n---\n" + HEADER + body + "\n")
 
         # Copilot path-specific instructions (the core goes to copilot-instructions.md)
         if not always and globs:
-            write(out / ".github/instructions" / f"secure-vibe-coding-{s.name}.instructions.md",
+            write(out / ".github/instructions" / f"secure-vibe-coding-{short}.instructions.md",
                   f'---\napplyTo: "{",".join(globs)}"\n---\n' + HEADER + body + "\n")
 
     write(out / ".github/copilot-instructions.md", compact)
