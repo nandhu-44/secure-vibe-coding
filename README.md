@@ -19,7 +19,7 @@ SecureVibe is a pack of [Agent Skills](https://code.claude.com/docs/en/skills) p
 
 **Tooling**
 - `skills/secure-coding/scripts/secscan.py`: stdlib-only scanner. 60+ rules across secrets, transport, injection, crypto, web config, memory safety, containers, CI, IaC, and LLM, with a Python AST pass. Output includes CWE/OWASP tags and fixes. Use `--with-external` to merge semgrep, gitleaks, and bandit results.
-- `hooks/hooks.json`: a Claude Code PostToolUse hook that scans every file the agent writes. **HIGH findings block and are fed back to the agent**, and MEDIUM findings become hints.
+- `hooks/hooks.json`: two Claude Code hooks. **SessionStart** injects the core card into every session, because models (especially smaller ones) often don't invoke skills on their own. **PostToolUse** scans every file the agent writes: HIGH findings block and are fed back to the agent, and MEDIUM findings (for example "login route with no rate limiting") become hints. Opt out with `SECUREVIBE_SESSION_CONTEXT=off` / `SECUREVIBE_HOOK=off`.
 - `tools/build_dist.py`: generates rule files for Cursor, Windsurf, Continue, Cline, Copilot, and `AGENTS.md` agents, plus a **compact ~1.5k-token core card** for small-context local models.
 - `evals/`: 20 realistic prompts that tempt agents into insecure code, with a runner that compares baseline vs pack for any agent CLI.
 

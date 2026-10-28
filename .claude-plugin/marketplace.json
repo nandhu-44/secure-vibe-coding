@@ -1,6 +1,8 @@
 {
   "name": "securevibe",
-  "owner": { "name": "SecureVibe contributors" },
+  "owner": {
+    "name": "nandhu-44"
+  },
   "plugins": [
     {
       "name": "securevibe",

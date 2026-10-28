@@ -278,6 +278,13 @@ def scan_file_level(display: str, text: str, lines: list[str], langs: set[str], 
         if r and "securevibe: ignore" not in text:
             out.append(make_finding(r, display, 1, lines[0] if lines else "", severity="low",
                                     title="Dockerfile has no non-root USER instruction"))
+    if langs & {"py", "js", "go", "java", "rb", "php", "cs"} and not RATE_LIMIT_RE.search(text):
+        m = AUTH_ROUTE_RE.search(text)
+        r = rules_by_id.get("SV-WEB-009")
+        if m and r:
+            ln = text.count("\n", 0, m.start())
+            if not suppressed(lines, ln, r["id"]):
+                out.append(make_finding(r, display, ln + 1, lines[ln]))
     if "gha" in langs and "pull_request_target" in text and re.search(
             r"ref:\s*\$\{\{\s*github\.event\.pull_request\.head\.(sha|ref)|github\.head_ref", text):
         r = rules_by_id.get("SV-CI-004")
@@ -287,9 +294,24 @@ def scan_file_level(display: str, text: str, lines: list[str], langs: set[str], 
     return out
 
 
+# Route registrations for credential/OTP endpoints in common frameworks.
+AUTH_ROUTE_RE = re.compile(
+    r"""(?ix)
+    (\.(post|route|api_route|add_url_rule|HandleFunc|Handle|POST|Post)\s*\(\s*["'`][^"'`]*/
+     |@(app|router|bp|blueprint|api)\.(post|route)\s*\(\s*["'][^"']*/
+     |@(Post|Request)Mapping\s*\(\s*(value\s*=\s*)?["'][^"']*/
+     |Route::post\s*\(\s*["'][^"']*/
+     |\bpath\s*\(\s*["'][^"']*)
+    (log-?in|sign-?in|signin|auth/token|token|otp|verify-?otp|2fa|mfa|forgot|password-?reset|reset-?password|register|sign-?up)\b""")
+RATE_LIMIT_RE = re.compile(r"(?i)rate.?limit|limiter|throttl|slowapi|express-rate-limit|rate-limiter-flexible|Ratelimit|httprate|bucket4j|django-axes|RateLimiter")
+
 BUILTIN_RULES = [
     {"id": "SV-NET-003", "title": "HTTP request without a timeout", "severity": "low", "cwe": "CWE-400", "owasp": "A06:2025",
      "fix": "Pass timeout= (e.g. timeout=10) so a slow or malicious server cannot hang workers.", "langs": [], "patterns": []},
+    {"id": "SV-WEB-009", "title": "Authentication/OTP/reset endpoint with no rate limiting in this file", "severity": "medium",
+     "cwe": "CWE-307", "owasp": "A07:2025", "langs": [], "patterns": [],
+     "fix": "Rate-limit credential endpoints per IP and per account (e.g. 5 attempts / 15 min) with express-rate-limit, slowapi, "
+            "flask-limiter, DRF throttles, Bucket4j or httprate. If limiting is applied elsewhere (gateway/middleware), suppress with a reason."},
     {"id": "SV-CI-004", "title": "pull_request_target workflow checks out untrusted PR code", "severity": "high", "cwe": "CWE-829",
      "owasp": "A03:2025", "fix": "Use pull_request instead, or never check out/execute PR head code in a pull_request_target job with secrets.",
      "langs": [], "patterns": []},

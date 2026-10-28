@@ -47,3 +47,7 @@ async function ask(prompt) {
 }
 
 app.listen(3000);
+
+app.post("/login", async (req, res) => { // expect: SV-WEB-009
+  res.json({ ok: true });
+});

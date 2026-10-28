@@ -1,5 +1,5 @@
 {
-  "description": "SecureVibe: scan every file Claude writes or edits; block on HIGH findings so they are fixed immediately.",
+  "description": "SecureVibe: inject the core secure-coding card at session start; scan every file Claude writes or edits and block on HIGH findings.",
   "hooks": {
     "PostToolUse": [
       {
@@ -9,6 +9,17 @@
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/secure-coding/scripts/hook_post_edit.py\"",
             "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/secure-coding/scripts/hook_session_start.py\"",
+            "timeout": 10
           }
         ]
       }

@@ -66,3 +66,8 @@ def check(signature, expected_sig):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)  # expect: SV-WEB-001
+
+
+@app.post("/auth/login")  # expect: SV-WEB-009
+def login():
+    return "ok"

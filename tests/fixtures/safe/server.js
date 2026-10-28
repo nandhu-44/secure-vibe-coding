@@ -32,3 +32,7 @@ function render(el, comment) {
 
 const sessionToken = crypto.randomBytes(32).toString("base64url");
 app.listen(3000);
+
+app.post("/login", async (req, res) => {
+  res.json({ ok: true });
+});

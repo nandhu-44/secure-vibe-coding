@@ -80,3 +80,11 @@ def test_eval_runner_end_to_end(tmp_path):
     assert results["none"]["category"] == "INS"
     assert results["agents-md"]["category"] == "SEC"
     assert results["skills"]["category"] == "SEC"
+
+
+def test_session_start_hook_injects_core_card():
+    res = subprocess.run([sys.executable, str(ROOT / "skills" / "secure-coding" / "scripts" / "hook_session_start.py")],
+                         capture_output=True, text=True)
+    assert res.returncode == 0
+    ctx = json.loads(res.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert core_card(load_skills()[0]) in ctx

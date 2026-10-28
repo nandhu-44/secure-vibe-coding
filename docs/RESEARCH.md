@@ -19,7 +19,8 @@ _Last updated: 2026-10. This file records why SecureVibe is built the way it is.
 4. **Automated feedback beats instructions for weak models.** A post-edit hook runs the scanner and feeds HIGH findings back immediately. Tool output is acted on more reliably than system-prompt text.
 5. **Low-level code needs its own track**, targeting exactly the CWEs agents produce (120/122/125/787/415/416/14/676).
 6. **Supply chain**: never invent packages; verify existence; pin and lock.
-7. **Small models need small rules**: a ≤6k-character core card (`AGENTS.compact.md`) and progressive disclosure for the rest.
+7. **Don't rely on the model choosing to load a skill.** In our own smoke test, Claude Code on a small model wrote an Express auth API in headless mode without ever invoking a skill. The plugin therefore also injects the core card at SessionStart (always-on, like `AGENTS.md`), and the post-edit scanner flags auth routes that have no rate limiter.
+8. **Small models need small rules**: a ≤6k-character core card (`AGENTS.compact.md`) and progressive disclosure for the rest.
 
 ## 2. Existing solutions (and how SecureVibe relates)
 | Project | What it is | Strengths | Gaps SecureVibe addresses |

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "Secure-by-default coding skills for AI agents: core rules, web/API, low-level C/C++/Rust, supply chain & infra, AI/LLM features, and security review, plus a dependency-free scanner and an auto-scan hook.",
   "author": {
-    "name": "SecureVibe contributors"
+    "name": "nandhu-44",
+    "url": "https://github.com/nandhu-44"
   },
   "license": "Apache-2.0",
   "keywords": [
