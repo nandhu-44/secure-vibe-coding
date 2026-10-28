@@ -1,0 +1,46 @@
+{
+  "pack": "transport",
+  "rules": [
+    {
+      "id": "SV-NET-001",
+      "title": "Plaintext (non-TLS) endpoint URL",
+      "severity": "medium",
+      "cwe": "CWE-319",
+      "owasp": "A04:2025",
+      "langs": [
+        "code",
+        "config"
+      ],
+      "patterns": [
+        "(?i)\\b(http|ws|ftp)://(?=[a-z0-9\\[])(?!(localhost|127\\.\\d+\\.\\d+\\.\\d+|0\\.0\\.0\\.0|\\[::1\\]|host\\.docker\\.internal|[a-z0-9.-]+\\.(local|localhost|test|internal|example|invalid)\\b|(www\\.)?example\\.(com|org|net)|www\\.w3\\.org|schemas\\.|json-schema\\.org|purl\\.org|ns\\.adobe\\.com|xml\\.org|www\\.apache\\.org|java\\.sun\\.com|maven\\.apache\\.org|xmlns|\\$\\{|\\{\\{))"
+      ],
+      "fix": "Use https:// (or wss://). Plain HTTP exposes data and credentials to anyone on the network.",
+      "unless": "(?i)xmlns|<!DOCTYPE|license|@see|schemaLocation"
+    },
+    {
+      "id": "SV-NET-002",
+      "title": "TLS certificate verification disabled",
+      "severity": "high",
+      "cwe": "CWE-295",
+      "owasp": "A04:2025",
+      "langs": [
+        "code",
+        "config"
+      ],
+      "patterns": [
+        "\\bverify\\s*=\\s*False\\b",
+        "ssl\\._create_unverified_context|(verify_mode|cert_reqs)\\s*=\\s*(ssl\\.)?CERT_NONE\\b|check_hostname\\s*=\\s*False",
+        "rejectUnauthorized\\s*:\\s*false",
+        "NODE_TLS_REJECT_UNAUTHORIZED[\\\"']?\\s*[=:]\\s*[\\\"']?0",
+        "InsecureSkipVerify\\s*:\\s*true",
+        "\\bcurl\\b[^\\n|]*\\s(-k|--insecure)\\b",
+        "\\bwget\\b[^\\n|]*--no-check-certificate",
+        "NoopHostnameVerifier|ALLOW_ALL_HOSTNAME_VERIFIER|TrustAllCerts|trustAllCerts|ServerCertificateValidationCallback\\s*=.*true",
+        "danger_accept_invalid_certs\\s*\\(\\s*true",
+        "(?i)ssl_verify(peer|host)?\\s*[=,]\\s*(false|0)\\b",
+        "CURLOPT_SSL_VERIFY(PEER|HOST)\\s*,\\s*(0|false)"
+      ],
+      "fix": "Keep default certificate verification. For private CAs, pass the CA bundle path instead of disabling checks."
+    }
+  ]
+}

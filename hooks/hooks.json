@@ -1,0 +1,17 @@
+{
+  "description": "SecureVibe: scan every file Claude writes or edits; block on HIGH findings so they are fixed immediately.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/secure-coding/scripts/hook_post_edit.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

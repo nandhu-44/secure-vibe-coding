@@ -1,0 +1,162 @@
+{
+  "pack": "web",
+  "rules": [
+    {
+      "id": "SV-WEB-001",
+      "title": "Debug mode / developer error pages enabled",
+      "severity": "medium",
+      "cwe": "CWE-489",
+      "owasp": "A02:2025",
+      "langs": [
+        "code",
+        "config"
+      ],
+      "patterns": [
+        "^\\s*DEBUG\\s*=\\s*True\\b",
+        "\\bapp\\.run\\([^)]*debug\\s*=\\s*True",
+        "\\bapp\\.debug\\s*=\\s*True",
+        "\\bFLASK_DEBUG\\s*=\\s*['\\\"]?1",
+        "UseDeveloperExceptionPage\\(\\)",
+        "include-stacktrace\\s*[=:]\\s*always",
+        "display_errors\\s*[=,]\\s*['\\\"]?(1|On|true)"
+      ],
+      "fix": "Default to debug off; enable only via an explicit development env var, never in production."
+    },
+    {
+      "id": "SV-WEB-002",
+      "title": "Overly permissive CORS",
+      "severity": "medium",
+      "cwe": "CWE-942",
+      "owasp": "A02:2025",
+      "langs": [
+        "code",
+        "config"
+      ],
+      "patterns": [
+        "(?i)Access-Control-Allow-Origin['\\\"]?\\s*[:,]\\s*['\\\"]\\*",
+        "\\borigin\\s*:\\s*(['\\\"]\\*['\\\"]|true)\\s*[,}]",
+        "allow_origins\\s*=\\s*\\[\\s*['\\\"]\\*['\\\"]",
+        "CORS_(ALLOW_ALL_ORIGINS|ORIGIN_ALLOW_ALL)\\s*=\\s*True",
+        "AllowAnyOrigin\\s*\\(\\s*\\)",
+        "@CrossOrigin\\s*(\\(\\s*\\)|$|\\(\\s*(origins\\s*=\\s*)?\\\"\\*\\\")",
+        "\\bcors\\s*\\(\\s*\\)",
+        "CORS\\(\\s*app\\s*\\)",
+        "AllowOrigins:\\s*\\[\\]string\\{\\s*\\\"\\*\\\"",
+        "AllowAllOrigins\\s*:\\s*true"
+      ],
+      "fix": "Allowlist explicit origins (from config); never combine '*' or reflected Origin with credentials."
+    },
+    {
+      "id": "SV-WEB-003",
+      "title": "Insecure cookie/session flags",
+      "severity": "medium",
+      "cwe": "CWE-614",
+      "owasp": "A07:2025",
+      "langs": [
+        "code",
+        "config"
+      ],
+      "patterns": [
+        "\\bhttpOnly\\s*:\\s*false",
+        "(?i)\\b(SESSION|CSRF)_COOKIE_(SECURE|HTTPONLY)\\s*=\\s*False",
+        "\\bsameSite\\s*:\\s*['\\\"]none['\\\"]",
+        "cookie\\s*:\\s*\\{[^}]*secure\\s*:\\s*false",
+        "\\.(set_cookie|cookie)\\s*\\([^)]*httponly\\s*=\\s*False",
+        "HttpOnly\\s*=\\s*false",
+        "Secure\\s*:\\s*false\\s*,\\s*HttpOnly"
+      ],
+      "fix": "Set cookies HttpOnly, Secure, SameSite=Lax/Strict."
+    },
+    {
+      "id": "SV-WEB-004",
+      "title": "CSRF protection disabled",
+      "severity": "medium",
+      "cwe": "CWE-352",
+      "owasp": "A01:2025",
+      "langs": [
+        "code",
+        "config"
+      ],
+      "patterns": [
+        "csrf\\(\\)\\.disable\\(\\)|csrf\\s*\\(\\s*AbstractHttpConfigurer::disable\\s*\\)",
+        "WTF_CSRF_ENABLED\\s*=\\s*False",
+        "@csrf_exempt\\b",
+        "\\bcsrf\\s*=\\s*False\\b",
+        "skip_before_action\\s+:verify_authenticity_token",
+        "protect_from_forgery\\s+with:\\s*:null_session"
+      ],
+      "fix": "Keep CSRF protection on for cookie-authenticated state-changing routes (or use SameSite + token-based auth headers)."
+    },
+    {
+      "id": "SV-WEB-005",
+      "title": "Mass assignment: request body bound directly to a model",
+      "severity": "medium",
+      "cwe": "CWE-915",
+      "owasp": "A01:2025",
+      "langs": [
+        "js",
+        "py",
+        "rb",
+        "php"
+      ],
+      "patterns": [
+        "\\.(create|update|insert|insertOne|updateOne|findOneAndUpdate|findByIdAndUpdate|build|upsert)\\s*\\(\\s*([\\w.]+\\s*,\\s*)?req\\.body\\s*[,)]",
+        "Object\\.assign\\s*\\(\\s*\\w+\\s*,\\s*req\\.body\\s*\\)",
+        "\\{\\s*\\.\\.\\.req\\.body\\s*\\}",
+        "\\*\\*request\\.(json|form|data|POST|get_json\\(\\))",
+        "\\.(update|create|new)\\s*\\(\\s*params(\\[:\\w+\\])?\\s*\\)(?!\\.permit)",
+        "::create\\(\\s*\\$request->all\\(\\)\\s*\\)|->fill\\(\\s*\\$request->all\\(\\)\\s*\\)"
+      ],
+      "fix": "Allowlist writable fields (DTO/schema, strong params, $fillable) and set owner/role/price server-side."
+    },
+    {
+      "id": "SV-WEB-006",
+      "title": "Open redirect to a user-controlled URL",
+      "severity": "medium",
+      "cwe": "CWE-601",
+      "owasp": "A01:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "\\bredirect\\s*\\(\\s*(req\\.(query|body|params)|request\\.(args|GET|form|query_params|values)|params\\[|\\$_(GET|POST|REQUEST))",
+        "res\\.redirect\\s*\\(\\s*req\\.",
+        "http\\.Redirect\\([^,]+,[^,]+,\\s*r\\.URL\\.Query"
+      ],
+      "fix": "Only redirect to relative paths or an allowlist of hosts; reject //, schemes and backslashes."
+    },
+    {
+      "id": "SV-WEB-007",
+      "title": "World-writable file permissions",
+      "severity": "medium",
+      "cwe": "CWE-732",
+      "owasp": "A01:2025",
+      "langs": [
+        "code",
+        "dockerfile"
+      ],
+      "patterns": [
+        "\\bchmod\\s+(-R\\s+)?0?777\\b",
+        "\\bchmod\\s*\\([^)]*\\b0o?777\\b",
+        "os\\.chmod\\([^)]*0o?777",
+        "os\\.(Chmod|WriteFile|MkdirAll)\\([^)]*0?777\\)"
+      ],
+      "fix": "Use the least permissive mode (e.g. 0600 for secrets, 0644/0755 otherwise)."
+    },
+    {
+      "id": "SV-WEB-008",
+      "title": "Insecure temporary file creation",
+      "severity": "medium",
+      "cwe": "CWE-377",
+      "owasp": "A01:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "\\btempfile\\.mktemp\\s*\\(",
+        "\\b(tmpnam|tempnam|mktemp)\\s*\\("
+      ],
+      "fix": "Use tempfile.NamedTemporaryFile/mkstemp (Python) or mkstemp (C) which create the file atomically."
+    }
+  ]
+}

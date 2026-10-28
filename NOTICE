@@ -1,0 +1,26 @@
+SecureVibe
+Copyright 2026 SecureVibe contributors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+SecureVibe's guidance is original writing that is informed by, and maps to, the works below.
+Where short material is quoted (standard category names and IDs, CERT rule titles, one
+benchmark prompt) or a document is adapted, the source is credited in place. The full
+bibliography is in docs/RESEARCH.md.
+
+- OWASP Top 10, ASVS, API Security Top 10, Top 10 for LLM Applications, Cheat Sheet Series
+  (OWASP Foundation, CC BY-SA 4.0): https://owasp.org, https://genai.owasp.org
+  Only category identifiers/names are reproduced; control descriptions are SecureVibe's own.
+- OpenSSF "Security-Focused Guide for AI Code Assistant Instructions" and
+  "Compiler Options Hardening Guide for C and C++" (CC BY 4.0): https://best.openssf.org
+  skills/secure-lowlevel/references/hardening-flags.md is adapted from the latter.
+- SEI CERT C/C++ Coding Standards (Carnegie Mellon University): rule identifiers and titles
+  referenced in skills/secure-lowlevel/references/c-cpp.md.
+- Project CodeGuard (Cisco / Coalition for Secure AI, OASIS Open), CC BY 4.0:
+  https://github.com/cosai-oasis/project-codeguard (cited as related work; no text reproduced).
+- MITRE CWE (identifiers referenced): https://cwe.mitre.org
+- Research cited for statistics: SecureAgentBench (arXiv:2509.22097), BaxBench (arXiv:2502.11844),
+  SecCodePLT (arXiv:2410.11096), Spracklen et al. (arXiv:2406.10279), Kim et al. (arXiv:2303.17491).
+
+Third-party names (frameworks, libraries, cloud providers, tools) are trademarks of their
+respective owners and are used only to identify compatible technologies.

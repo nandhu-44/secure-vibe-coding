@@ -1,0 +1,135 @@
+{
+  "pack": "memory",
+  "rules": [
+    {
+      "id": "SV-MEM-001",
+      "title": "Banned unbounded string/buffer function",
+      "severity": "high",
+      "cwe": "CWE-120",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "(?<![\\w.>])(gets|strcpy|strcat|sprintf|vsprintf|stpcpy|wcscpy|wcscat|lstrcpy|lstrcat|StrCpy|StrCat)\\s*\\("
+      ],
+      "fix": "Use bounded APIs with the destination size: snprintf, strlcpy/strlcat (or memcpy after an explicit length check), fgets instead of gets."
+    },
+    {
+      "id": "SV-MEM-002",
+      "title": "scanf-family %s without a width (buffer overflow)",
+      "severity": "high",
+      "cwe": "CWE-120",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "\\b(f|s|vs|vf)?scanf\\s*\\([^;]*\\\"[^\\\"]*%s"
+      ],
+      "fix": "Always give a field width (e.g. %63s for char buf[64]) or use fgets + parsing."
+    },
+    {
+      "id": "SV-MEM-003",
+      "title": "Non-literal format string",
+      "severity": "high",
+      "cwe": "CWE-134",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "(?<![\\w.>])(printf|syslog|vprintf|warn|warnx|err|errx)\\s*\\(\\s*(LOG_\\w+\\s*,\\s*)?[A-Za-z_][\\w>.\\[\\]-]*\\s*\\)",
+        "(?<![\\w.>])(fprintf|dprintf|vfprintf)\\s*\\(\\s*\\w+\\s*,\\s*[A-Za-z_][\\w>.\\[\\]-]*\\s*\\)",
+        "(?<![\\w.>])snprintf\\s*\\(\\s*[\\w>.\\[\\]-]+\\s*,\\s*[^,]+,\\s*[A-Za-z_][\\w>.\\[\\]-]*\\s*\\)"
+      ],
+      "fix": "Use a literal format: printf(\"%s\", msg). Compile with -Wformat -Wformat-security -Werror=format-security."
+    },
+    {
+      "id": "SV-MEM-004",
+      "title": "Secret buffer cleared with memset (may be optimized away)",
+      "severity": "medium",
+      "cwe": "CWE-14",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "(?i)\\bmemset\\s*\\(\\s*&?\\s*\\w*(key|pass|secret|pwd|token|priv|seed|nonce|cred)\\w*"
+      ],
+      "fix": "Use explicit_bzero / memset_s / SecureZeroMemory / sodium_memzero so the compiler cannot remove the wipe."
+    },
+    {
+      "id": "SV-MEM-005",
+      "title": "Shell command execution from C/C++",
+      "severity": "medium",
+      "cwe": "CWE-78",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "(?<![\\w.>])(system|popen)\\s*\\(\\s*(?!\\\")"
+      ],
+      "fix": "Use execve/posix_spawn with an argument vector; never build shell strings from input."
+    },
+    {
+      "id": "SV-MEM-006",
+      "title": "Allocation size multiplication without overflow check",
+      "severity": "medium",
+      "cwe": "CWE-190",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "\\b(malloc|alloca|realloc)\\s*\\(\\s*[^;()]*\\w\\s*\\*\\s*\\w"
+      ],
+      "fix": "Use calloc(n, size) or check n > SIZE_MAX / size (or __builtin_mul_overflow) before allocating.",
+      "unless": "sizeof\\s*\\(\\s*\\w+\\s*\\)\\s*\\)\\s*;?\\s*$|__builtin_mul_overflow|SIZE_MAX"
+    },
+    {
+      "id": "SV-MEM-007",
+      "title": "Unchecked numeric conversion (atoi/atol)",
+      "severity": "low",
+      "cwe": "CWE-190",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "(?<![\\w.>])(atoi|atol|atoll|atof)\\s*\\("
+      ],
+      "fix": "Use strtol/strtoul with errno and end-pointer checks and validate the range."
+    },
+    {
+      "id": "SV-MEM-008",
+      "title": "alloca / variable-length array (stack exhaustion)",
+      "severity": "low",
+      "cwe": "CWE-770",
+      "owasp": "",
+      "langs": [
+        "c"
+      ],
+      "patterns": [
+        "(?<![\\w.>])alloca\\s*\\("
+      ],
+      "fix": "Bound the size or allocate on the heap."
+    },
+    {
+      "id": "SV-MEM-009",
+      "title": "Rust unsafe block (requires SAFETY justification)",
+      "severity": "low",
+      "cwe": "CWE-119",
+      "owasp": "",
+      "langs": [
+        "rs"
+      ],
+      "patterns": [
+        "\\bunsafe\\s*\\{"
+      ],
+      "fix": "Minimize unsafe, document invariants in a // SAFETY: comment directly above, and run Miri/ASan.",
+      "unless": "SAFETY:"
+    }
+  ]
+}

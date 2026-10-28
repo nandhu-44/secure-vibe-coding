@@ -1,0 +1,77 @@
+---
+name: secure-supply-chain-infra
+description: Secure dependencies, builds, containers, CI/CD and cloud config. Use when adding or upgrading packages (npm, pip, cargo, go, maven, gems, composer), writing package.json/requirements/pyproject/lockfiles, Dockerfiles or compose files, GitHub Actions/GitLab CI workflows, Terraform/OpenTofu/CloudFormation/Pulumi, Kubernetes/Helm manifests, nginx configs, or deployment scripts. Prevents hallucinated/typosquatted packages (slopsquatting), unpinned versions and actions, CI script injection, leaked build secrets, root containers, public buckets, and over-privileged IAM.
+license: Apache-2.0
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py *)
+metadata:
+  version: "0.1.0"
+  pack: securevibe
+  standards: "OWASP A03:2025, SLSA v1.1, OpenSSF Scorecard, CIS Docker/Kubernetes benchmarks, NIST SSDF"
+---
+
+# Secure Supply Chain & Infrastructure
+
+## 1. Dependencies: don't install what doesn't exist [A03:2025, CWE-1104, CWE-829]
+LLMs hallucinate package names, and attackers register them ("slopsquatting"). In a USENIX Security 2025 study of 576k generated samples ([Spracklen et al., *We Have a Package for You!*, arXiv:2406.10279](https://arxiv.org/abs/2406.10279)), about 20% of suggested packages didn't exist. The rate was about 22% for open-source models versus about 5% for commercial ones, and many hallucinated names recurred consistently, which makes them easy to squat.
+- **Only add a package if you are confident it exists and is the canonical one.** Prefer the standard library or a well-known package. If unsure, say so and ask the user to confirm. Never "guess" a name like `flask-jwt-secure-auth`.
+- Check before adding (when tools allow): `npm view <pkg> name version repository time.created`, `pip index versions <pkg>` or `pip download --no-deps`, `cargo search`, the `go list -m` proxy. Red flags: created very recently, very few downloads, no repository, name one character off a popular package, install scripts.
+- **Pin and lock**: commit `package-lock.json`/`pnpm-lock.yaml`/`yarn.lock`, `poetry.lock`/`uv.lock` (or `requirements.txt` with `==` and ideally `--require-hashes`), `Cargo.lock` for binaries, `go.sum`. Use `npm ci` / `pip install --require-hashes` / `uv sync --locked` in CI.
+- Use exact or compatible ranges deliberately. Never `*` or `latest` in manifests.
+- Minimize install scripts: `npm ci --ignore-scripts` where feasible, pnpm `onlyBuiltDependencies` allowlist. Use a cooldown/min-release-age so brand-new versions aren't pulled the day they ship (Renovate `minimumReleaseAge`, pnpm `minimumReleaseAge`, uv `--exclude-newer`). This blunts worm-style compromises such as the September 2025 "Shai-Hulud" npm campaign (see CISA's alert on the npm ecosystem compromise).
+- Keep deps current with Dependabot/Renovate. Scan with `npm audit`, `pip-audit`, `osv-scanner`, `govulncheck`, `cargo audit`, Trivy/Grype.
+- Private package names: use scoped/namespaced packages and registry config so a public package can't shadow them (dependency confusion).
+- Don't vendor random code from gists or Stack Overflow without reviewing it. Note licenses.
+
+## 2. Containers [CIS Docker]
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM python:3.13-slim@sha256:<digest> AS build          # pinned tag + digest; slim/distroless
+WORKDIR /app
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.txt --target /deps
+COPY . .
+
+FROM gcr.io/distroless/python3-debian12@sha256:<digest>
+COPY --from=build /deps /deps
+COPY --from=build /app /app
+ENV PYTHONPATH=/deps
+USER 65532:65532                                         # non-root
+ENTRYPOINT ["python", "/app/main.py"]
+```
+- Non-root `USER`. Read-only root FS at runtime. Drop all capabilities. Use `no-new-privileges`.
+- No secrets in `ENV`/`ARG`/`COPY` (they persist in layers). Use `RUN --mount=type=secret`.
+- `.dockerignore` excludes `.git`, `.env*`, keys, `node_modules`, and local artifacts.
+- Multi-stage builds with minimal final images. Scan with Trivy/Grype. Sign images with cosign. Generate an SBOM (syft).
+- Compose: don't publish DB/Redis ports to `0.0.0.0`. Bind to `127.0.0.1` or use internal networks. Set passwords via env/secrets.
+
+## 3. CI/CD (GitHub Actions; same ideas apply to GitLab/CircleCI)
+- Top-level `permissions: contents: read`. Grant `write` per job only where needed.
+- **Pin third-party actions to a full commit SHA** with a version comment. Tags are mutable: `tj-actions/changed-files` was compromised via tag rewrite in March 2025 (CVE-2025-30066).
+- **Never interpolate untrusted context in `run:`** (`${{ github.event.issue.title }}`, PR body, branch names). Pass it via `env:` and quote `"$VAR"`.
+- **`pull_request_target` and `workflow_run`** run with secrets. Never check out or execute PR head code in them.
+- Use OIDC (`id-token: write`) to cloud providers instead of long-lived keys. Scope the trust policy to the repo, branch, and environment.
+- Protect deploy jobs with environments plus required reviewers. Use branch protection/rulesets.
+- Don't echo secrets. Avoid `set -x` around secrets. Mask derived values (`::add-mask::`).
+- Self-hosted runners: never on public repos. Use ephemeral runners.
+- Add `zizmor` / `actionlint` for workflow linting and OpenSSF Scorecard for repo posture.
+- Produce provenance (SLSA, `actions/attest-build-provenance`) for released artifacts.
+Details: [ci-cd.md](references/ci-cd.md)
+
+## 4. Cloud & IaC
+- Storage private by default: S3 Block Public Access on, no `public-read` ACLs, no `Principal: "*"` without conditions. Use presigned URLs for sharing.
+- Databases not publicly accessible. Use private subnets, SG ingress from app SGs only, TLS required, encryption at rest, automated backups.
+- IAM least privilege: no `Action: "*"` / `Resource: "*"`. Use roles over users and no long-lived access keys. Enforce MFA for humans.
+- Network: no `0.0.0.0/0` on SSH/RDP/DB ports. Use SSM/bastion/zero-trust access.
+- Enable logging (CloudTrail/Audit Logs), metadata service v2 (IMDSv2 `http_tokens = "required"`), and KMS encryption.
+- Terraform state holds secrets: use a remote backend with encryption and locking, and never commit `*.tfstate`.
+- Scan IaC with Checkov, tfsec/Trivy config, or KICS.
+Details: [iac-cloud.md](references/iac-cloud.md)
+
+## 5. Kubernetes
+`securityContext`: `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, `capabilities: {drop: ["ALL"]}`, `seccompProfile: {type: RuntimeDefault}`. Set resource requests and limits, NetworkPolicies (default deny), and Secrets via an external secret manager. Enforce the Pod Security Admission `restricted` profile. RBAC least privilege, and no `cluster-admin` for apps.
+
+## 6. Web server / reverse proxy
+TLS 1.2+ (prefer 1.3), HSTS, an HTTP→HTTPS redirect, `server_tokens off`, request size and timeouts, and no directory listing. Don't proxy to user-controlled hosts.
+
+## Before you reply
+Run `python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py <changed files>` on the changed Dockerfiles, workflows, and IaC. Tell the user which versions you pinned, which secrets they must create, and any package you were unsure exists.

@@ -1,0 +1,79 @@
+---
+name: secure-ai-features
+description: Secure patterns for applications that embed LLMs or agents. Use when writing code that calls OpenAI/Anthropic/Gemini/Ollama/LiteLLM or other model APIs, builds chatbots, RAG pipelines, embeddings/vector search, function/tool calling, AI agents, MCP servers or clients, LLM-generated SQL/code/HTML, or AI features exposed to users. Prevents prompt injection impact, excessive agency, insecure output handling, leaked keys/system prompts, cross-tenant RAG leaks, and unbounded cost (denial of wallet).
+license: Apache-2.0
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py *)
+metadata:
+  version: "0.1.0"
+  pack: securevibe
+  standards: "OWASP Top 10 for LLM Applications 2025, OWASP Agentic AI Threats, MCP security best practices"
+---
+
+# Secure AI / LLM Features
+
+**Core assumption: prompt injection cannot be reliably prevented.** Any text the model reads (user messages, web pages, emails, PDFs, RAG chunks, tool results, filenames, image text) can hijack it. Design so that **a fully hijacked model still can't do damage**. Security lives in deterministic code around the model, not in the prompt.
+
+## 1. Keys & endpoints [LLM02, CWE-798]
+- Provider keys are server-side only (env/secret manager). Never ship them in `NEXT_PUBLIC_*`/`VITE_*` or mobile apps, and never set `dangerouslyAllowBrowser: true` with a real key. The browser calls your backend, and the backend calls the model.
+- Local model servers (Ollama `:11434`, vLLM, LM Studio) have no auth by default. Bind them to `127.0.0.1` or put them behind an authenticating proxy. Never expose them on `0.0.0.0` to the internet.
+
+## 2. Treat model output as untrusted input [LLM05, CWE-94/79/89]
+| Output goes to… | Do |
+|---|---|
+| HTML/Markdown in a browser | Escape, or render markdown with a sanitizer (no raw HTML). Block `javascript:` links and remote images (data exfiltration via image URLs) |
+| SQL | Don't let the LLM write raw SQL against prod. Use parameterized query templates with LLM-chosen *values*, or a read-only role scoped to a view with RLS, plus a statement timeout |
+| Shell / code execution | Don't. If you must: a sandbox (container/gVisor/Firecracker/WASM), no network, no secrets, CPU/mem/time limits, and human approval |
+| `eval`, `pickle`, templates | Never |
+| Structured actions | JSON schema / tool schema with strict validation (pydantic/zod). Reject unknown fields and dispatch to an allowlist |
+| URLs to fetch | SSRF rules (allowlist, block private IPs) |
+| File paths | Map to an allowlisted directory and resolve-and-check |
+
+## 3. Tools & agents: limit agency [LLM06]
+- **Identity comes from the session, never from model arguments.** A tool like `get_order(order_id)` must check `order.user_id == session.user_id` inside the tool.
+  ```python
+  def get_order(order_id: str, *, ctx: RequestContext) -> dict:      # ctx injected by your code, not the model
+      order = db.orders.find_one({"id": order_id, "user_id": ctx.user_id})
+      if not order:
+          return {"error": "not_found"}
+      return {"id": order["id"], "status": order["status"]}             # minimal fields
+  ```
+- Least privilege: give each agent the fewest tools and the narrowest scopes (read-only DB user, per-user OAuth tokens, a specific directory). Separate read and write tools.
+- **Human-in-the-loop for consequential actions**: payments, sending email/messages, deleting data, changing permissions, executing code, merging/deploying. Show the exact action and arguments for approval.
+- **The "lethal trifecta"** (a term coined by Simon Willison, 2025) is private data + untrusted content + an exfiltration channel (web requests, email, image rendering, link unfurling). Never give a single agent context all three without strict egress allowlists.
+- Validate tool arguments with schemas. Cap loops (max steps/tool calls), timeouts, and total tokens per task.
+- Log every tool call (who, what, args, result status) for audit.
+
+## 4. RAG & data access [LLM08, LLM02]
+- **Enforce document-level authorization at retrieval time.** Filter the vector search by `tenant_id`/ACL metadata *in the query*, not by asking the model to ignore other users' data.
+- Treat retrieved chunks as untrusted (indirect injection). Keep them in delimited data sections, not as instructions.
+- Don't index secrets or credentials. Strip PII where not needed. Respect deletion requests in the vector store too.
+- Validate and sanitize uploads before ingestion (size, type, malware scanning for office/PDF files).
+
+## 5. Prompts [LLM01, LLM07]
+- System prompts are **not secret and not a security boundary**. Don't put keys, internal URLs, or authz rules there and rely on them.
+- Keep the system prompt static. Put user input in the user role. Clearly delimit untrusted content (e.g. `<document>…</document>`) and say it is data.
+- Optional extra layers: input/output classifiers (Llama Guard, Prompt Guard, provider moderation, NeMo Guardrails), plus canary tokens to detect prompt leaks. Use them as defense in depth only.
+
+## 6. Cost & abuse limits [LLM10, CWE-770]
+- Authenticate AI endpoints. Use per-user rate limits **and** token/day budgets, plus `max_tokens` on every call and caps on input length (characters/tokens) and attachments.
+- Concurrency caps per user, request timeouts, and retries with backoff that never loop.
+- Provider-side spend limits and alerts. Cache identical requests where safe.
+
+## 7. MCP servers & clients
+- **Servers**: authenticate (OAuth 2.1 per the MCP auth spec for remote servers; local stdio servers only run tools for the local user). Validate every tool input. Use least-privilege credentials per user, never a shared admin token. No token passthrough to downstream APIs. Rate-limit. Bind local HTTP servers to `127.0.0.1` and validate the `Origin` header (DNS rebinding).
+- Tool descriptions and results are prompt-injection vectors (tool poisoning). Keep descriptions static and honest. Don't return untrusted HTML or instructions as plain text without marking it as data.
+- **Clients/hosts**: pin and review third-party servers, show tool calls to users, require approval for sensitive tools, and isolate servers from each other's credentials.
+Details: [agent-tool-safety.md](references/agent-tool-safety.md)
+
+## 8. Data & privacy [LLM02]
+Tell users what is sent to third-party models. Don't send secrets or unnecessary PII. Check provider data-retention settings. Redact before logging prompts and completions, because logs often hold the most sensitive data in AI apps.
+
+## 9. Supply chain for models [LLM03, LLM04]
+Load weights in `safetensors` (never `pickle`/`torch.load` without `weights_only=True`). Don't use `trust_remote_code=True` on unvetted repos. Pin model revisions (commit hash) on Hugging Face. Verify sources.
+
+Mapping to the OWASP LLM Top 10 (2025): [llm-top10-2025.md](references/llm-top10-2025.md)
+
+Sources: [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/llm-top-10/) · [MCP security best practices](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices) · Simon Willison, ["The lethal trifecta for AI agents"](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/)
+
+## Before you reply
+Run `python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py <changed files>`. Confirm that keys are server-only, tools take identity from context, outputs are validated or encoded, and limits are set. Tell the user which actions need human approval.

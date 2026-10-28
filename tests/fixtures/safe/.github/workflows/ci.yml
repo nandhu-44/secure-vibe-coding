@@ -1,0 +1,12 @@
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: some-org/deploy-action@0123456789abcdef0123456789abcdef01234567 # v2.1.0
+      - env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: echo "$TITLE"

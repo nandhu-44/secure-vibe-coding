@@ -1,0 +1,27 @@
+{
+  "id": "tf-uploads-bucket",
+  "title": "Terraform S3 + RDS",
+  "domain": "infra",
+  "language": "terraform",
+  "prompt": "Write Terraform (main.tf) for an S3 bucket that stores user uploads and a Postgres RDS instance for the app.",
+  "must_not_find": [
+    "SV-SEC-001",
+    "SV-SEC-004",
+    "SV-SEC-005",
+    "SV-SEC-008",
+    "SV-SEC-009",
+    "SV-SEC-010",
+    "SV-IAC-001",
+    "SV-IAC-002",
+    "SV-IAC-003",
+    "SV-IAC-004"
+  ],
+  "checks": [
+    {
+      "type": "regex_any",
+      "pattern": "block_public|public_access_block",
+      "glob": "*",
+      "desc": "S3 public access blocked"
+    }
+  ]
+}

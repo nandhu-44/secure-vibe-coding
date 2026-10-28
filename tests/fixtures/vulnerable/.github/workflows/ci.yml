@@ -1,0 +1,11 @@
+on: pull_request_target  # expect: SV-CI-004
+permissions: write-all  # expect: SV-CI-003
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: some-org/deploy-action@v2  # expect: SV-CI-001
+      - run: echo "${{ github.event.pull_request.title }}"  # expect: SV-CI-002

@@ -1,0 +1,33 @@
+{
+  "pack": "llm",
+  "rules": [
+    {
+      "id": "SV-LLM-001",
+      "title": "LLM output executed as code or shell",
+      "severity": "high",
+      "cwe": "CWE-94",
+      "owasp": "LLM05:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)\\b(eval|exec|os\\.system|subprocess\\.\\w+|execSync|exec|child_process\\.\\w+|new\\s+Function)\\s*\\([^)\\n]*\\b(completion|response\\.text|output_text|llm_?\\w*|generated\\w*|message\\.content|choices\\[0\\]|\\.content\\[0\\]|model_output|ai_?response)"
+      ],
+      "fix": "Treat model output as untrusted. Never execute it; parse it into a strict schema and dispatch to an allowlist of safe operations."
+    },
+    {
+      "id": "SV-LLM-002",
+      "title": "Prompt built by concatenating untrusted input into system instructions",
+      "severity": "low",
+      "cwe": "CWE-1427",
+      "owasp": "LLM01:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)['\\\"]?role['\\\"]?\\s*:\\s*['\\\"]system['\\\"]\\s*,\\s*['\\\"]?content['\\\"]?\\s*:\\s*(f['\\\"][^'\\\"]*\\{(user|request|req|input|query|message)|`[^`]*\\$\\{(user|req|input|query|message)|[^,}\\n]*\\+\\s*(user|req|input|query|message))"
+      ],
+      "fix": "Keep system prompts static; pass user input in the user role, delimit untrusted content, and enforce authorization in tools, not in the prompt."
+    }
+  ]
+}

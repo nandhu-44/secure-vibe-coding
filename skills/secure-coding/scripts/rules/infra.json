@@ -1,0 +1,206 @@
+{
+  "pack": "infra",
+  "rules": [
+    {
+      "id": "SV-INF-001",
+      "title": "Container base image not pinned (latest/untagged)",
+      "severity": "medium",
+      "cwe": "CWE-1104",
+      "owasp": "A03:2025",
+      "langs": [
+        "dockerfile"
+      ],
+      "patterns": [
+        "(?i)^\\s*FROM\\s+(--platform=\\S+\\s+)?[\\w./-]+:latest\\b",
+        "(?i)^\\s*FROM\\s+(--platform=\\S+\\s+)?(?!scratch\\b)[\\w.-]+/[\\w./-]+\\s*(AS\\s+\\w+)?\\s*$",
+        "(?i)^\\s*FROM\\s+(--platform=\\S+\\s+)?(python|node|ubuntu|debian|alpine|golang|nginx|openjdk|eclipse-temurin|ruby|php|rust|postgres|redis|mysql|centos|fedora|amazonlinux)\\s*(AS\\s+\\w+)?\\s*$"
+      ],
+      "fix": "Pin a specific version tag, ideally with a digest (image:1.2.3@sha256:...), and use minimal/distroless images."
+    },
+    {
+      "id": "SV-INF-002",
+      "title": "Container runs as root",
+      "severity": "medium",
+      "cwe": "CWE-250",
+      "owasp": "A02:2025",
+      "langs": [
+        "dockerfile"
+      ],
+      "patterns": [
+        "(?i)^\\s*USER\\s+(root|0)(:\\S+)?\\s*$"
+      ],
+      "fix": "Create and switch to an unprivileged user (USER 10001 / USER app)."
+    },
+    {
+      "id": "SV-INF-003",
+      "title": "Secret passed via Dockerfile ENV/ARG (persists in image)",
+      "severity": "high",
+      "cwe": "CWE-538",
+      "owasp": "A04:2025",
+      "langs": [
+        "dockerfile"
+      ],
+      "patterns": [
+        "(?i)^\\s*(ENV|ARG)\\s+\\w*(PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|PRIVATE_?KEY|ACCESS_?KEY)\\w*\\s*[= ]\\s*\\S"
+      ],
+      "fix": "Use BuildKit secrets (RUN --mount=type=secret) at build time and runtime env/secret mounts at run time.",
+      "unless": "\\$\\{?\\w+\\}?\\s*$|_FILE\\b"
+    },
+    {
+      "id": "SV-INF-004",
+      "title": "Remote script piped directly into a shell",
+      "severity": "medium",
+      "cwe": "CWE-494",
+      "owasp": "A08:2025",
+      "langs": [
+        "code",
+        "dockerfile",
+        "yaml"
+      ],
+      "patterns": [
+        "\\b(curl|wget)\\b[^|\\n]*\\|\\s*(sudo\\s+)?(ba|z|da)?sh\\b",
+        "\\biwr\\b[^|\\n]*\\|\\s*iex\\b"
+      ],
+      "fix": "Download, verify a checksum/signature, then execute; or use a package manager."
+    },
+    {
+      "id": "SV-CI-001",
+      "title": "GitHub Action not pinned to a full commit SHA",
+      "severity": "medium",
+      "cwe": "CWE-829",
+      "owasp": "A03:2025",
+      "langs": [
+        "gha"
+      ],
+      "patterns": [
+        "^\\s*-?\\s*uses:\\s*['\\\"]?(?!\\./|docker://)[\\w.-]+/[\\w./-]+@(?![0-9a-f]{40}\\b)[^\\s'\\\"#]+"
+      ],
+      "fix": "Pin third-party actions to a 40-char commit SHA (with a # vX.Y comment) and let Dependabot/Renovate update them.",
+      "unless": "uses:\\s*['\\\"]?(actions|github)/"
+    },
+    {
+      "id": "SV-CI-002",
+      "title": "Untrusted GitHub context interpolated into a workflow (script injection)",
+      "severity": "high",
+      "cwe": "CWE-78",
+      "owasp": "A03:2025",
+      "langs": [
+        "gha"
+      ],
+      "patterns": [
+        "\\$\\{\\{\\s*github\\.event\\.(issue|pull_request|comment|review|review_comment|head_commit|commits|pages|discussion|workflow_run)\\b[^}]*\\.(title|body|message|name|label|ref|head_ref|email|default_branch|page_name)\\s*\\}\\}",
+        "\\$\\{\\{\\s*github\\.head_ref\\s*\\}\\}"
+      ],
+      "fix": "Pass the value through an env: variable and reference it as \"$VAR\" in the script; never inline ${{ }} of user-controlled fields into run:.",
+      "unless": "^\\s*(?!-?\\s*(run|script)\\s*:)-?\\s*[\\w-]+\\s*:\\s*['\\\"]?\\$\\{\\{"
+    },
+    {
+      "id": "SV-CI-003",
+      "title": "Overly broad workflow token permissions",
+      "severity": "medium",
+      "cwe": "CWE-250",
+      "owasp": "A01:2025",
+      "langs": [
+        "gha"
+      ],
+      "patterns": [
+        "^\\s*permissions:\\s*write-all\\b"
+      ],
+      "fix": "Set top-level permissions: contents: read and grant writes per job only where needed."
+    },
+    {
+      "id": "SV-IAC-001",
+      "title": "Publicly accessible cloud resource",
+      "severity": "high",
+      "cwe": "CWE-284",
+      "owasp": "A01:2025",
+      "langs": [
+        "tf",
+        "yaml",
+        "json"
+      ],
+      "patterns": [
+        "\\bacl\\s*=\\s*\\\"public-read(-write)?\\\"",
+        "\\bpublicly_accessible\\s*=\\s*true",
+        "block_public_(acls|policy)\\s*=\\s*false",
+        "\\\"Principal\\\"\\s*:\\s*\\\"\\*\\\"",
+        "PublicAccessBlockConfiguration[^\\n]*false",
+        "\\ballUsers\\b|\\ballAuthenticatedUsers\\b"
+      ],
+      "fix": "Keep storage/databases private; grant access to specific principals; enable public access blocks."
+    },
+    {
+      "id": "SV-IAC-002",
+      "title": "Network rule open to the internet",
+      "severity": "medium",
+      "cwe": "CWE-284",
+      "owasp": "A02:2025",
+      "langs": [
+        "tf",
+        "yaml",
+        "json"
+      ],
+      "patterns": [
+        "cidr_blocks\\s*=\\s*\\[\\s*\\\"0\\.0\\.0\\.0/0\\\"",
+        "(source_ranges|sourceRanges|CidrIp)\\W+\\[?\\s*\\\"?0\\.0\\.0\\.0/0",
+        "ipv6_cidr_blocks\\s*=\\s*\\[\\s*\\\"::/0\\\""
+      ],
+      "fix": "Restrict ingress to known CIDRs; never expose SSH/RDP/DB ports to 0.0.0.0/0."
+    },
+    {
+      "id": "SV-IAC-003",
+      "title": "Wildcard IAM permissions",
+      "severity": "medium",
+      "cwe": "CWE-269",
+      "owasp": "A01:2025",
+      "langs": [
+        "tf",
+        "yaml",
+        "json"
+      ],
+      "patterns": [
+        "\\\"Action\\\"\\s*:\\s*\\\"\\*\\\"",
+        "\\bactions\\s*=\\s*\\[\\s*\\\"\\*\\\"\\s*\\]",
+        "\\\"Action\\\"\\s*:\\s*\\[\\s*\\\"\\*\\\"\\s*\\]",
+        "\\\"Resource\\\"\\s*:\\s*\\\"\\*\\\"[^\\n]*\\\"Action\\\"\\s*:\\s*\\\"\\w+:\\*\\\""
+      ],
+      "fix": "Grant only the specific actions and resources required (least privilege)."
+    },
+    {
+      "id": "SV-IAC-004",
+      "title": "Encryption at rest disabled",
+      "severity": "medium",
+      "cwe": "CWE-311",
+      "owasp": "A04:2025",
+      "langs": [
+        "tf",
+        "yaml",
+        "json"
+      ],
+      "patterns": [
+        "\\b(storage_)?encrypted\\s*=\\s*false",
+        "\\bencryption\\s*=\\s*false",
+        "\\\"Encrypted\\\"\\s*:\\s*false"
+      ],
+      "fix": "Enable encryption at rest (KMS-managed keys)."
+    },
+    {
+      "id": "SV-K8S-001",
+      "title": "Privileged or root container settings",
+      "severity": "high",
+      "cwe": "CWE-250",
+      "owasp": "A02:2025",
+      "langs": [
+        "yaml"
+      ],
+      "patterns": [
+        "^\\s*privileged:\\s*true",
+        "^\\s*allowPrivilegeEscalation:\\s*true",
+        "^\\s*host(Network|PID|IPC):\\s*true",
+        "^\\s*runAsUser:\\s*0\\s*$",
+        "^\\s*runAsNonRoot:\\s*false"
+      ],
+      "fix": "Use runAsNonRoot: true, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, drop ALL capabilities."
+    }
+  ]
+}

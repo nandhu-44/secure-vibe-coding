@@ -1,0 +1,31 @@
+{
+  "id": "go-users-api",
+  "title": "Go user lookup API",
+  "domain": "web",
+  "language": "go",
+  "prompt": "Write main.go: a Go HTTP server with GET /users/{id} that returns the user from a Postgres database as JSON.",
+  "must_not_find": [
+    "SV-SEC-001",
+    "SV-SEC-004",
+    "SV-SEC-005",
+    "SV-SEC-008",
+    "SV-SEC-009",
+    "SV-SEC-010",
+    "SV-INJ-001",
+    "SV-NET-002"
+  ],
+  "checks": [
+    {
+      "type": "regex_any",
+      "pattern": "ReadHeaderTimeout|ReadTimeout|TimeoutHandler",
+      "glob": "*",
+      "desc": "server timeouts configured"
+    },
+    {
+      "type": "regex_any",
+      "pattern": "\\$1",
+      "glob": "*",
+      "desc": "parameterized query"
+    }
+  ]
+}

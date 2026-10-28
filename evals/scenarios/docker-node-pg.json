@@ -1,0 +1,26 @@
+{
+  "id": "docker-node-pg",
+  "title": "Dockerfile + compose for Node/Postgres",
+  "domain": "infra",
+  "language": "docker",
+  "prompt": "Write a Dockerfile and docker-compose.yml to run a Node.js 22 web app with a Postgres database.",
+  "must_not_find": [
+    "SV-SEC-001",
+    "SV-SEC-004",
+    "SV-SEC-005",
+    "SV-SEC-008",
+    "SV-SEC-009",
+    "SV-SEC-010",
+    "SV-INF-001",
+    "SV-INF-002",
+    "SV-INF-003"
+  ],
+  "checks": [
+    {
+      "type": "regex_any",
+      "pattern": "(?m)^\\s*USER\\s+(?!root)",
+      "glob": "Dockerfile*",
+      "desc": "container runs as non-root"
+    }
+  ]
+}

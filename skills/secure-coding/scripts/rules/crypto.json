@@ -1,0 +1,126 @@
+{
+  "pack": "crypto",
+  "rules": [
+    {
+      "id": "SV-CRY-001",
+      "title": "Fast/unsalted hash used for passwords",
+      "severity": "high",
+      "cwe": "CWE-916",
+      "owasp": "A04:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)(hashlib\\.(md5|sha1|sha224|sha256|sha384|sha512)|createHash\\(\\s*['\\\"](md5|sha1|sha256|sha512)['\\\"]\\)|DigestUtils\\.(md5|sha1|sha256)\\w*|MessageDigest\\.getInstance\\(\\s*\\\"(MD5|SHA-?1|SHA-?256|SHA-?512)\\\"|\\bmd5\\s*\\(|\\bsha1\\s*\\(|md5\\.Sum|sha1\\.Sum|sha256\\.Sum256)[^\\n]*(password|passwd|pwd|passphrase)",
+        "(?i)\\b\\w*(password|passwd|pwd)\\w*\\s*=\\s*[^\\n]*\\b(md5|sha1|sha256|sha512)\\w*\\s*\\("
+      ],
+      "fix": "Hash passwords with argon2id (argon2-cffi / argon2 npm / x/crypto/argon2) or bcrypt cost>=12."
+    },
+    {
+      "id": "SV-CRY-002",
+      "title": "Weak hash algorithm (MD5/SHA-1)",
+      "severity": "low",
+      "cwe": "CWE-328",
+      "owasp": "A04:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "\\bhashlib\\.(md5|sha1)\\s*\\(",
+        "createHash\\(\\s*['\\\"](md5|sha1)['\\\"]",
+        "\\b(MD5|SHA1)\\.Create\\(\\)|\\bMD5CryptoServiceProvider\\b",
+        "\\\"crypto/(md5|sha1)\\\"",
+        "MessageDigest\\.getInstance\\(\\s*\\\"(MD5|SHA-?1)\\\""
+      ],
+      "fix": "Fine for non-security checksums (set usedforsecurity=False in Python); otherwise use SHA-256/BLAKE2, HMAC, or a password hash.",
+      "unless": "usedforsecurity\\s*=\\s*False"
+    },
+    {
+      "id": "SV-CRY-003",
+      "title": "Broken or unauthenticated cipher / mode",
+      "severity": "high",
+      "cwe": "CWE-327",
+      "owasp": "A04:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "Cipher\\.getInstance\\(\\s*\\\"(DES|DESede|RC4|ARCFOUR|Blowfish|RC2)",
+        "\\bAES/ECB\\b|Cipher\\.getInstance\\(\\s*\\\"AES\\\"\\s*\\)",
+        "\\bMODE_ECB\\b",
+        "(?i)['\\\"](des|des-ede3|des-ede3-cbc|des-cbc|rc4|rc2|bf|bf-cbc|aes-\\d+-ecb)['\\\"]",
+        "\\bcreateCipher\\s*\\(",
+        "algorithms\\.(TripleDES|ARC4|Blowfish|CAST5|IDEA)\\b",
+        "modes\\.ECB\\(",
+        "\\bDES\\.new\\(|\\bARC4\\.new\\(",
+        "\\\"crypto/(des|rc4)\\\""
+      ],
+      "fix": "Use AES-256-GCM or ChaCha20-Poly1305 with a random nonce per message via a vetted library."
+    },
+    {
+      "id": "SV-CRY-004",
+      "title": "Non-cryptographic RNG used for a security value",
+      "severity": "high",
+      "cwe": "CWE-338",
+      "owasp": "A04:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)\\b\\w*(token|secret|password|passwd|otp|nonce|salt|session|reset|api_?key|verification|invite|csrf|apikey|code)\\w*\\s*(=|:|:=)[^\\n]*(Math\\.random\\s*\\(|\\brandom\\.(random|randint|choice|choices|randrange|getrandbits|sample)\\s*\\(|\\brand\\s*\\(\\s*\\)|\\bmt_rand\\s*\\(|new\\s+Random\\s*\\(|math/rand|rand\\.(Intn|Int|Read)\\b)"
+      ],
+      "fix": "Use a CSPRNG: secrets.token_urlsafe / crypto.randomBytes / crypto.randomUUID / crypto/rand / SecureRandom."
+    },
+    {
+      "id": "SV-CRY-005",
+      "title": "JWT verification weakened or skipped",
+      "severity": "high",
+      "cwe": "CWE-347",
+      "owasp": "A07:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)algorithms\\s*=\\s*\\[[^\\]]*['\\\"]none['\\\"]",
+        "verify_signature['\\\"]?\\s*:\\s*False",
+        "jwt\\.decode\\([^)]*verify\\s*=\\s*False",
+        "(?i)\\balgorithm['\\\"]?\\s*[:=]\\s*['\\\"]none['\\\"]",
+        "ignoreExpiration\\s*:\\s*true",
+        "\\bjwt\\.decode\\s*\\(\\s*(token|req\\.|request|auth)",
+        "(?i)verify_(exp|aud|iss)['\\\"]?\\s*:\\s*False",
+        "\\.parseUnsecuredClaims\\(|setSigningKeyResolver|\\.decode\\(\\s*token\\s*,\\s*options\\s*=\\s*\\{\\s*['\\\"]verify_signature"
+      ],
+      "fix": "Verify with an explicit algorithm list (e.g. ['RS256'] or ['HS256']), and check exp/aud/iss. In jsonwebtoken use jwt.verify, not jwt.decode."
+    },
+    {
+      "id": "SV-CRY-006",
+      "title": "Hardcoded IV / nonce / salt",
+      "severity": "medium",
+      "cwe": "CWE-329",
+      "owasp": "A04:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)\\b(iv|nonce|salt)\\s*(=|:)\\s*(b?['\\\"][^'\\\"\\n]{4,}['\\\"]|bytes\\(\\s*\\d+\\s*\\)|Buffer\\.alloc\\(\\s*\\d+|new\\s+byte\\[\\s*\\d+\\s*\\]|\\[\\]byte\\(\\s*\\\")"
+      ],
+      "fix": "Generate a fresh random IV/nonce for every encryption (os.urandom(12) / randomBytes(12)) and store it with the ciphertext.",
+      "unless": "(?i)(\\$\\{|\\{\\{|<[a-z_ -]+>|your[_-]|example|changeme|change_me|placeholder|xxxx|\\*\\*\\*|dummy|fake|redacted|not[_-]?a[_-]?real|replace[_-]?me|process\\.env|os\\.environ|getenv|import\\.meta\\.env|secrets\\.|vault:)"
+    },
+    {
+      "id": "SV-CRY-007",
+      "title": "Secret/signature compared with non-constant-time equality",
+      "severity": "medium",
+      "cwe": "CWE-208",
+      "owasp": "A04:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)\\b\\w*(signature|hmac|digest|api_?key|secret|webhook_?token)\\w*\\s*(==|===|!=|!==)\\s*[\\w\\\"'`]"
+      ],
+      "fix": "Use hmac.compare_digest / crypto.timingSafeEqual / subtle.ConstantTimeCompare.",
+      "unless": "(?i)(==|===|!=|!==)\\s*(null|undefined|None|nil|['\\\"`]|0\\b|true|false)|compare_digest|timingSafeEqual|ConstantTimeCompare|typeof|len\\(|\\.length"
+    }
+  ]
+}

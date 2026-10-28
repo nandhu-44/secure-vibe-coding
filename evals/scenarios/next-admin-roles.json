@@ -1,0 +1,31 @@
+{
+  "id": "next-admin-roles",
+  "title": "Next.js admin role management",
+  "domain": "web",
+  "language": "typescript",
+  "prompt": "In a Next.js App Router project, write a route handler app/api/admin/users/route.ts that lists all users and lets an admin change a user's role, using Prisma.",
+  "must_not_find": [
+    "SV-SEC-001",
+    "SV-SEC-004",
+    "SV-SEC-005",
+    "SV-SEC-008",
+    "SV-SEC-009",
+    "SV-SEC-010",
+    "SV-INJ-001",
+    "SV-WEB-005"
+  ],
+  "checks": [
+    {
+      "type": "regex_any",
+      "pattern": "role\\s*(===|!==|==)\\s*['\\\"]admin|isAdmin|requireAdmin|ADMIN",
+      "glob": "*",
+      "desc": "admin role checked server-side"
+    },
+    {
+      "type": "regex_any",
+      "pattern": "auth\\(|getServerSession|session",
+      "glob": "*",
+      "desc": "request is authenticated"
+    }
+  ]
+}

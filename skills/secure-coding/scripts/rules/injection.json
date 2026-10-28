@@ -1,0 +1,214 @@
+{
+  "pack": "injection",
+  "rules": [
+    {
+      "id": "SV-INJ-001",
+      "title": "SQL query built with string interpolation/concatenation",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A05:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "(?i)\\bf[\\\"']{1,3}\\s*(select\\b[^\\\"'`\\n]*\\bfrom\\b|insert\\s+into\\b|update\\s+\\w+\\s+set\\b|delete\\s+from\\b)[^\\\"'\\n]*\\{",
+        "(?i)`\\s*(select\\b[^\\\"'`\\n]*\\bfrom\\b|insert\\s+into\\b|update\\s+\\w+\\s+set\\b|delete\\s+from\\b)[^`]*\\$\\{",
+        "(?i)[\\\"']\\s*(select\\b[^\\\"'`\\n]*\\bfrom\\b|insert\\s+into\\b|update\\s+\\w+\\s+set\\b|delete\\s+from\\b)[^\\\"'\\n]*[\\\"']\\s*(\\+|\\.\\s*\\$|\\.\\.|%\\s*[(\\w]|\\.format\\()",
+        "(?i)Sprintf\\(\\s*\\\"\\s*(select\\b[^\\\"'`\\n]*\\bfrom\\b|insert\\s+into\\b|update\\s+\\w+\\s+set\\b|delete\\s+from\\b)",
+        "\\$(queryRawUnsafe|executeRawUnsafe)\\s*\\(",
+        "(?i)\\.raw\\(\\s*`[^`]*\\$\\{"
+      ],
+      "fix": "Use parameterized queries / bind parameters (e.g. cursor.execute(\"... WHERE id = %s\", (id,)), db.query('... $1', [id])). Allowlist identifiers."
+    },
+    {
+      "id": "SV-INJ-002",
+      "title": "OS command built from variable input / shell invocation",
+      "severity": "high",
+      "cwe": "CWE-78",
+      "owasp": "A05:2025",
+      "langs": [
+        "js",
+        "go",
+        "php",
+        "rb",
+        "java",
+        "cs"
+      ],
+      "patterns": [
+        "\\bexec(Sync)?\\s*\\(\\s*`[^`]*\\$\\{",
+        "\\bexec(Sync)?\\s*\\(\\s*[\\\"'][^\\\"']*[\\\"']\\s*\\+",
+        "exec\\.Command\\(\\s*\\\"(sh|bash|/bin/sh|/bin/bash|cmd|cmd\\.exe|powershell)\\\"\\s*,\\s*\\\"(-c|/c|-Command)\\\"",
+        "\\b(system|shell_exec|passthru|popen|proc_open)\\s*\\(\\s*[^\\\"')]*\\$",
+        "`[^`\\n]*#\\{[^}]+\\}[^`\\n]*`",
+        "Runtime\\.getRuntime\\(\\)\\.exec\\(\\s*[^\\\")]*\\+",
+        "Process\\.Start\\(\\s*[^\\\")]*\\+",
+        "\\bspawn(Sync)?\\s*\\([^)]*shell\\s*:\\s*true"
+      ],
+      "fix": "Call the program directly with an argument array (execFile/spawn without shell, exec.Command(\"prog\", arg)), validate args, and use -- before user values."
+    },
+    {
+      "id": "SV-INJ-003",
+      "title": "Dynamic code evaluation",
+      "severity": "high",
+      "cwe": "CWE-95",
+      "owasp": "A05:2025",
+      "langs": [
+        "js",
+        "php",
+        "rb"
+      ],
+      "patterns": [
+        "(?<![.\\w$])eval\\s*\\(",
+        "\\bnew\\s+Function\\s*\\(",
+        "\\bset(Timeout|Interval)\\s*\\(\\s*[\\\"'`]",
+        "\\bcreate_function\\s*\\(",
+        "\\binstance_eval\\b|\\bclass_eval\\s*\\(\\s*[^&{]"
+      ],
+      "fix": "Never evaluate strings as code. Parse data with JSON.parse / a real parser, or map inputs to an allowlist of functions."
+    },
+    {
+      "id": "SV-INJ-004",
+      "title": "Unsafe HTML sink (XSS risk)",
+      "severity": "medium",
+      "cwe": "CWE-79",
+      "owasp": "A05:2025",
+      "langs": [
+        "js",
+        "py",
+        "html",
+        "rb",
+        "php"
+      ],
+      "patterns": [
+        "\\.(inner|outer)HTML\\s*\\+?=(?!\\s*[\\\"'`]{2}\\s*;?\\s*$)",
+        "\\bdocument\\.write(ln)?\\s*\\(",
+        "dangerouslySetInnerHTML",
+        "\\bv-html\\s*=",
+        "\\|\\s*safe\\b",
+        "\\bmark_safe\\s*\\(",
+        "\\bMarkup\\s*\\(",
+        "\\{\\{\\{\\s*[\\w.]+\\s*\\}\\}\\}",
+        "<%-",
+        "\\.html_safe\\b",
+        "bypassSecurityTrust(Html|Script|Url|ResourceUrl)",
+        "insertAdjacentHTML\\s*\\(",
+        "\\{@html\\s"
+      ],
+      "fix": "Let the framework auto-escape. If HTML is required, sanitize with DOMPurify (or bleach/nh3 server-side) using an allowlist.",
+      "unless": "(?i)DOMPurify|sanitize|bleach|nh3|escape|\\bf[\\\"']"
+    },
+    {
+      "id": "SV-INJ-005",
+      "title": "Unsafe deserialization of potentially untrusted data",
+      "severity": "high",
+      "cwe": "CWE-502",
+      "owasp": "A08:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "\\bc?[Pp]ickle\\.loads?\\s*\\(",
+        "\\bmarshal\\.loads?\\s*\\(",
+        "\\bshelve\\.open\\s*\\(",
+        "\\byaml\\.load\\s*\\((?![^)]*(Safe|Base)Loader)",
+        "\\byaml\\.(unsafe_load|full_load)\\s*\\(",
+        "\\bjsonpickle\\.decode\\s*\\(",
+        "\\bObjectInputStream\\b",
+        "\\bBinaryFormatter\\b|\\bNetDataContractSerializer\\b|TypeNameHandling\\.(All|Auto|Objects)",
+        "\\bunserialize\\s*\\(\\s*\\$",
+        "\\bMarshal\\.load\\b",
+        "\\bYAML\\.load\\s*\\((?![^)]*permitted)",
+        "node-serialize|serialize-javascript.*unserialize",
+        "\\btorch\\.load\\s*\\((?![^)]*weights_only\\s*=\\s*True)",
+        "\\bjoblib\\.load\\s*\\(",
+        "\\bdill\\.loads?\\s*\\("
+      ],
+      "fix": "Use JSON / yaml.safe_load / schema-validated formats for untrusted data. For ML weights use safetensors or torch.load(..., weights_only=True)."
+    },
+    {
+      "id": "SV-INJ-006",
+      "title": "File path built from request input (path traversal)",
+      "severity": "medium",
+      "cwe": "CWE-22",
+      "owasp": "A01:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "\\b(open|send_file|send_from_directory|FileResponse|sendFile|readFile(Sync)?|createReadStream|download|unlink(Sync)?|os\\.path\\.join|path\\.join|path\\.resolve|Paths\\.get|new\\s+File|ioutil\\.ReadFile|os\\.Open|filepath\\.Join|File\\.(Read|Open)\\w*|fopen|file_get_contents|include|require)\\s*\\([^)\\n]*(req\\.(query|body|params|files?)|request\\.(args|form|GET|POST|values|files|query_params|path_params)|\\$_(GET|POST|REQUEST|FILES)|params\\[|r\\.URL\\.Query|c\\.(Param|Query)\\()"
+      ],
+      "fix": "Map user input to server-chosen names, or resolve the full path and verify it stays under the allowed base directory (realpath + startswith)."
+    },
+    {
+      "id": "SV-INJ-007",
+      "title": "Server-side request to a user-controlled URL (SSRF)",
+      "severity": "medium",
+      "cwe": "CWE-918",
+      "owasp": "A01:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "\\b(requests\\.(get|post|put|delete|head|request)|httpx\\.(get|post|request|AsyncClient\\(\\)\\.get)|urllib\\.request\\.urlopen|urlopen|fetch|axios(\\.(get|post|request))?|got|http\\.Get|http\\.Post|HttpClient\\.\\w+Async|RestTemplate\\.\\w+|file_get_contents|curl_init|open-uri|URI\\.open)\\s*\\(\\s*[^)\\n]*(req\\.(query|body|params)|request\\.(args|form|json|GET|POST|values|query_params)|\\$_(GET|POST|REQUEST)|params\\[|r\\.URL\\.Query|r\\.FormValue)"
+      ],
+      "fix": "Allowlist schemes and hosts; resolve DNS and block private, loopback, link-local (169.254.169.254) and metadata addresses; disable or re-validate redirects; set timeouts and size caps."
+    },
+    {
+      "id": "SV-INJ-008",
+      "title": "Template built from user input (SSTI)",
+      "severity": "high",
+      "cwe": "CWE-1336",
+      "owasp": "A05:2025",
+      "langs": [
+        "py",
+        "js",
+        "java",
+        "rb",
+        "php"
+      ],
+      "patterns": [
+        "\\brender_template_string\\s*\\(\\s*(?![\\\"'])",
+        "\\b(jinja2\\.)?Template\\s*\\(\\s*(request|req|params|user|input)\\b",
+        "\\b(ejs|pug|handlebars|Handlebars|nunjucks)\\.(render|compile)\\s*\\(\\s*req\\.",
+        "\\bERB\\.new\\s*\\(\\s*params"
+      ],
+      "fix": "Keep templates static; pass user data only as template variables."
+    },
+    {
+      "id": "SV-INJ-009",
+      "title": "NoSQL query operator injection risk",
+      "severity": "medium",
+      "cwe": "CWE-943",
+      "owasp": "A05:2025",
+      "langs": [
+        "js",
+        "py"
+      ],
+      "patterns": [
+        "\\.(find|findOne|findOneAndUpdate|updateOne|updateMany|deleteOne|deleteMany|count(Documents)?)\\s*\\(\\s*req\\.(body|query|params)\\s*[,)]",
+        "\\$where\\s*:",
+        "\\.(find|find_one)\\s*\\(\\s*request\\.(json|get_json\\(\\)|args)"
+      ],
+      "fix": "Build the filter object explicitly from validated, type-checked fields (e.g. {email: String(req.body.email)}); reject keys starting with $; never use $where."
+    },
+    {
+      "id": "SV-INJ-010",
+      "title": "XML parser with external entities / DTD processing enabled (XXE)",
+      "severity": "high",
+      "cwe": "CWE-611",
+      "owasp": "A02:2025",
+      "langs": [
+        "code"
+      ],
+      "patterns": [
+        "resolve_entities\\s*=\\s*True",
+        "\\bnoent\\s*:\\s*true",
+        "setExpandEntityReferences\\s*\\(\\s*true",
+        "LIBXML_NOENT",
+        "XmlResolver\\s*=\\s*new\\s+XmlUrlResolver",
+        "DtdProcessing\\s*=\\s*DtdProcessing\\.Parse"
+      ],
+      "fix": "Disable DTDs/external entities (defusedxml in Python; disallow-doctype-decl in Java)."
+    }
+  ]
+}
