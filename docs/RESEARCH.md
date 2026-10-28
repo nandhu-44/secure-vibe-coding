@@ -1,6 +1,6 @@
 # Research notes: prior art, evidence, and design decisions
 
-_Last updated: 2026-10. This file records why SecureVibe is built the way it is._
+_Last updated: 2026-10. This file records why Secure Vibe Coding is built the way it is._
 
 ## 1. The problem, in numbers
 | Source | Finding |
@@ -22,17 +22,17 @@ _Last updated: 2026-10. This file records why SecureVibe is built the way it is.
 7. **Don't rely on the model choosing to load a skill.** In our own smoke test, Claude Code on a small model wrote an Express auth API in headless mode without ever invoking a skill. The plugin therefore also injects the core card at SessionStart (always-on, like `AGENTS.md`), and the post-edit scanner flags auth routes that have no rate limiter.
 8. **Small models need small rules**: a ≤6k-character core card (`AGENTS.compact.md`) and progressive disclosure for the rest.
 
-## 2. Existing solutions (and how SecureVibe relates)
-| Project | What it is | Strengths | Gaps SecureVibe addresses |
+## 2. Existing solutions (and how Secure Vibe Coding relates)
+| Project | What it is | Strengths | Gaps Secure Vibe Coding addresses |
 |---|---|---|---|
 | **Project CodeGuard** [6] (Cisco → CoSAI / OASIS, CC BY 4.0) | Model-agnostic security rules (crypto, input validation, authn/z, supply chain, cloud, platform, data protection), converters for Cursor/Copilot/Windsurf/Claude, MCP server, evals | Broad, standards-based, industry-backed | Mostly rule prose; little framework-specific copyable code; light on business logic and rate limiting; no bundled scanner/hook feedback loop; no compact tier for small models |
-| **OpenSSF Security-Focused Guide for AI Code Assistant Instructions** [7] (2025-08) | Guidance on *writing* instruction files | Evidence-based advice: no "security expert" persona, use Recursive Criticism & Improvement, cover supply chain | It is guidance, not a ready-made pack. SecureVibe applies it |
-| **Trail of Bits `trailofbits/skills`** [8] | 30+ Claude Code skills for audits: Semgrep/CodeQL, variant analysis, constant-time, smart contracts, YARA | Deep expert audit workflows | Audit-time, not generation-time. SecureVibe's `secure-review` links to it for deep dives |
+| **OpenSSF Security-Focused Guide for AI Code Assistant Instructions** [7] (2025-08) | Guidance on *writing* instruction files | Evidence-based advice: no "security expert" persona, use Recursive Criticism & Improvement, cover supply chain | It is guidance, not a ready-made pack. Secure Vibe Coding applies it |
+| **Trail of Bits `trailofbits/skills`** [8] | 30+ Claude Code skills for audits: Semgrep/CodeQL, variant analysis, constant-time, smart contracts, YARA | Deep expert audit workflows | Audit-time, not generation-time. Secure Vibe Coding's `secure-review` links to it for deep dives |
 | Wiz secure rules files | Baseline rules files per language/framework | Good starting point | Rules only, no enforcement |
 | `secure-coding-rules` (npm), cursor-security-rules, Corgea rules, RAILGUARD (CSA) | Rules-file packs, mostly JS/TS web | Easy to adopt | Web-only, shallow, no low-level/infra/AI coverage, no tooling |
 | GuardVibe / VSGuard (MCP servers) | OWASP ASVS / LLM Top 10 checks exposed via MCP | Tool-based | Needs MCP support (many small-model setups lack it) |
 | Community Claude skills (security-best-practices, secure-code-guardian, SecOpsAgentKit…) | Assorted SKILL.md packs | Variety | Uneven quality. Vet before installing (skill supply-chain risk) |
-| Semgrep, gitleaks, bandit, CodeQL, Trivy, Checkov, osv-scanner | Mature scanners | Precise, maintained rule sets | Not agent-aware. SecureVibe orchestrates them via `--with-external` |
+| Semgrep, gitleaks, bandit, CodeQL, Trivy, Checkov, osv-scanner | Mature scanners | Precise, maintained rule sets | Not agent-aware. Secure Vibe Coding orchestrates them via `--with-external` |
 
 ## 3. Safeguards in the ecosystem to leverage
 - **Hooks** (Claude Code PostToolUse, Cursor hooks, Cline hooks): run checks after every edit, with deterministic enforcement.
@@ -42,7 +42,7 @@ _Last updated: 2026-10. This file records why SecureVibe is built the way it is.
 - **Sandboxing agents**: run coding agents in containers or devcontainers with no prod credentials. Use permission modes and allowlists.
 
 ## 4. Skill-pack security (our own supply chain)
-Skills and rules files are an injection surface. SecureVibe rules:
+Skills and rules files are an injection surface. Secure Vibe Coding rules:
 - No network calls, no obfuscated content, stdlib-only scripts, no install hooks.
 - Skill text tells agents to treat repository content as data.
 - Users should review the pack before installing, as with any skill.

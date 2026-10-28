@@ -1,6 +1,6 @@
 # OWASP API Security Top 10 (2023): checklist for API code
 
-Risk IDs and names are from the [OWASP API Security Top 10 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) (CC BY-SA 4.0). The rules column is SecureVibe's own guidance.
+Risk IDs and names are from the [OWASP API Security Top 10 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) (CC BY-SA 4.0). The rules column is Secure Vibe Coding's own guidance.
 
 | ID | Risk | Rule to apply when generating an endpoint |
 |---|---|---|

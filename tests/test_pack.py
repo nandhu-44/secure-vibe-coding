@@ -31,7 +31,7 @@ def test_compact_rules_fit_small_context_and_windsurf_limit():
 
 def test_core_card_present_in_every_core_output():
     card = core_card(load_skills()[0])
-    for rel in ["AGENTS.md", "AGENTS.compact.md", ".github/copilot-instructions.md", ".clinerules/securevibe.md"]:
+    for rel in ["AGENTS.md", "AGENTS.compact.md", ".github/copilot-instructions.md", ".clinerules/secure-vibe-coding.md"]:
         assert card in (ROOT / "dist" / rel).read_text(), rel
 
 

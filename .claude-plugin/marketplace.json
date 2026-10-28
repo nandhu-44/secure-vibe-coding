@@ -1,11 +1,11 @@
 {
-  "name": "securevibe",
+  "name": "secure-vibe-coding",
   "owner": {
     "name": "nandhu-44"
   },
   "plugins": [
     {
-      "name": "securevibe",
+      "name": "secure-vibe-coding",
       "source": "./",
       "description": "Secure-by-default coding skills, scanner and auto-scan hook for AI coding agents."
     }

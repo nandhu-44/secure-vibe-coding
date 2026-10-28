@@ -5,7 +5,7 @@ license: Apache-2.0
 allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py *)
 metadata:
   version: "0.1.0"
-  pack: securevibe
+  pack: secure-vibe-coding
   standards: "OWASP Top 10 for LLM Applications 2025, OWASP Agentic AI Threats, MCP security best practices"
 ---
 

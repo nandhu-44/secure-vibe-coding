@@ -5,13 +5,13 @@ license: Apache-2.0
 allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/secscan.py *)
 metadata:
   version: "0.1.0"
-  pack: securevibe
+  pack: secure-vibe-coding
   standards: "OWASP Top 10 2025, ASVS 5.0, CWE Top 25, OpenSSF AI code assistant guide"
 ---
 
 # Secure Coding (core)
 
-This is the core skill of the SecureVibe pack. It applies to every coding task. Domain skills add depth:
+This is the core skill of the Secure Vibe Coding pack. It applies to every coding task. Domain skills add depth:
 
 | If the task involves… | Also load |
 |---|---|
@@ -86,7 +86,7 @@ Answer briefly: **Who** can call this (anonymous? logged-in? admin?) · **What**
 
 ### Step 3: After coding, self-check before replying
 1. **Scan** the files you created or changed:
-   `python3 ${CLAUDE_SKILL_DIR}/scripts/secscan.py <files or dir>` (stdlib only; add `--with-external` to also run semgrep/gitleaks/bandit if installed). Fix every HIGH finding. For each MEDIUM, fix it or explain in one line why it is a false positive (suppress with `securevibe: ignore[RULE-ID] reason`).
+   `python3 ${CLAUDE_SKILL_DIR}/scripts/secscan.py <files or dir>` (stdlib only; add `--with-external` to also run semgrep/gitleaks/bandit if installed). Fix every HIGH finding. For each MEDIUM, fix it or explain in one line why it is a false positive (suppress with `secure-vibe-coding: ignore[RULE-ID] reason`).
 2. **Review once** against [self-review](references/self-review.md). Re-read your diff as an attacker using the Step 1 answers. If you find an issue, fix it, then stop. One pass, no endless loops.
 3. **Report** in your reply, in 1–3 lines: the security-relevant choices you made (e.g. "passwords hashed with argon2id; login rate-limited to 5/min/IP; queries parameterized") and anything the user must configure (env vars, secrets, HTTPS in prod).
 

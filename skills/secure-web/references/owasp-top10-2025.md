@@ -1,6 +1,6 @@
 # OWASP Top 10:2025 → where this pack covers it
 
-Category IDs and names are from the [OWASP Top 10:2025](https://owasp.org/Top10/) (OWASP Foundation, CC BY-SA 4.0). The other columns are SecureVibe's own mapping.
+Category IDs and names are from the [OWASP Top 10:2025](https://owasp.org/Top10/) (OWASP Foundation, CC BY-SA 4.0). The other columns are Secure Vibe Coding's own mapping.
 
 | # | Category | Typical AI-code failure | Pack coverage |
 |---|---|---|---|

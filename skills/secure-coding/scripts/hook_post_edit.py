@@ -37,14 +37,14 @@ def main() -> int:
     advisory = [f for f in findings if f.severity == "medium" and f not in blocking]
 
     if blocking:
-        print("SecureVibe found security issues in the file you just wrote. Fix them now "
-              "(or, if a finding is a verified false positive, add `securevibe: ignore[RULE-ID] reason` on that line):\n"
+        print("Secure Vibe Coding found security issues in the file you just wrote. Fix them now "
+              "(or, if a finding is a verified false positive, add `secure-vibe-coding: ignore[RULE-ID] reason` on that line):\n"
               + secscan.render_text(blocking, color=False), file=sys.stderr)
         return 2
     if advisory:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PostToolUse",
-            "additionalContext": "SecureVibe advisory (review, fix if real):\n" + secscan.render_text(advisory, color=False),
+            "additionalContext": "Secure Vibe Coding advisory (review, fix if real):\n" + secscan.render_text(advisory, color=False),
         }}))
     return 0
 
@@ -53,5 +53,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as exc:  # a broken hook must never break the agent loop
-        print(f"securevibe hook error (ignored): {exc}", file=sys.stderr)
+        print(f"secure-vibe-coding hook error (ignored): {exc}", file=sys.stderr)
         sys.exit(0)

@@ -1,10 +1,10 @@
-# SecureVibe
+# Secure Vibe Coding
 
 **Secure-by-default skills for AI coding agents**, built so that older and open-weight models (Ollama, LM Studio, vLLM) can produce safe code too, not just frontier models.
 
-SecureVibe is a pack of [Agent Skills](https://code.claude.com/docs/en/skills) plus a dependency-free scanner and an auto-scan hook. It targets the flaws vibe-coded projects ship with: hardcoded secrets, `http://` endpoints, disabled TLS checks, missing authorization (IDOR), no rate limiting, string-built SQL, weak crypto, business-logic holes, unsafe C, hallucinated packages, open CI pipelines, and LLM features that execute model output.
+Secure Vibe Coding is a pack of [Agent Skills](https://code.claude.com/docs/en/skills) plus a dependency-free scanner and an auto-scan hook. It targets the flaws vibe-coded projects ship with: hardcoded secrets, `http://` endpoints, disabled TLS checks, missing authorization (IDOR), no rate limiting, string-built SQL, weak crypto, business-logic holes, unsafe C, hallucinated packages, open CI pipelines, and LLM features that execute model output.
 
-> Why not just tell the model "write secure code"? Because it measurably doesn't work. In SecureAgentBench ([Chen et al., 2025](https://arxiv.org/abs/2509.22097)), a generic security reminder produced **zero** improvement and increased failed runs. SecureVibe uses concrete rules, copyable secure patterns, and automated scanner feedback instead. See [docs/RESEARCH.md](docs/RESEARCH.md).
+> Why not just tell the model "write secure code"? Because it measurably doesn't work. In SecureAgentBench ([Chen et al., 2025](https://arxiv.org/abs/2509.22097)), a generic security reminder produced **zero** improvement and increased failed runs. Secure Vibe Coding uses concrete rules, copyable secure patterns, and automated scanner feedback instead. See [docs/RESEARCH.md](docs/RESEARCH.md).
 
 ## What's inside
 
@@ -25,26 +25,33 @@ SecureVibe is a pack of [Agent Skills](https://code.claude.com/docs/en/skills) p
 
 ## Install
 
-### Claude Code (plugin: skills + hook)
+### Any skills-compatible agent via [skills.sh](https://skills.sh)
 ```bash
-git clone https://github.com/nandhu-44/secure-vibe-coding securevibe
-claude --plugin-dir ./securevibe          # try it in one session
+npx skills add nandhu-44/secure-vibe-coding            # pick agents and skills interactively
+npx skills add nandhu-44/secure-vibe-coding --list     # see the 6 skills
 ```
-Or install it permanently: `/plugin marketplace add nandhu-44/secure-vibe-coding`, then `/plugin install securevibe@securevibe`.
+Install **all six** skills together. The domain skills call the scanner that ships inside `secure-coding`. Hooks are only included in the Claude Code plugin install below.
+
+### Claude Code (plugin: skills + hooks)
+```bash
+git clone https://github.com/nandhu-44/secure-vibe-coding secure-vibe-coding
+claude --plugin-dir ./secure-vibe-coding          # try it in one session
+```
+Or install it permanently: `/plugin marketplace add nandhu-44/secure-vibe-coding`, then `/plugin install secure-vibe-coding@secure-vibe-coding`.
 
 Skills only (no hook): copy `skills/*` into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project).
 
 ### Codex CLI, OpenCode, Jules, Zed, Amp and other `AGENTS.md` readers
-Vendor the repo at `./securevibe` (a git submodule or a copy) so reference links and the scanner resolve. Then:
+Vendor the repo at `./secure-vibe-coding` (a git submodule or a copy) so reference links and the scanner resolve. Then:
 ```bash
-git submodule add https://github.com/nandhu-44/secure-vibe-coding securevibe
-cp securevibe/dist/AGENTS.md AGENTS.md            # full pack (~12k tokens)
-cp securevibe/dist/AGENTS.compact.md AGENTS.md    # small/local models (~1.5k tokens)
+git submodule add https://github.com/nandhu-44/secure-vibe-coding secure-vibe-coding
+cp secure-vibe-coding/dist/AGENTS.md AGENTS.md            # full pack (~12k tokens)
+cp secure-vibe-coding/dist/AGENTS.compact.md AGENTS.md    # small/local models (~1.5k tokens)
 ```
 
 ### Aider + Ollama (local models)
 ```bash
-aider --model ollama_chat/qwen2.5-coder:14b --read securevibe/dist/AGENTS.compact.md
+aider --model ollama_chat/qwen2.5-coder:14b --read secure-vibe-coding/dist/AGENTS.compact.md
 ```
 Raise Ollama's context (`OLLAMA_CONTEXT_LENGTH=16384` or `num_ctx`) so the rules aren't truncated. The default 2–4k context silently drops system text.
 
@@ -55,11 +62,11 @@ The core rule is always on. Domain rules activate by file glob (C/C++, Docker/CI
 
 ### Scanner on its own (pre-commit / CI)
 ```bash
-python3 securevibe/skills/secure-coding/scripts/secscan.py .              # whole repo
-python3 securevibe/skills/secure-coding/scripts/secscan.py --changed      # git changes only
-python3 securevibe/skills/secure-coding/scripts/secscan.py src --json --fail-on medium
+python3 secure-vibe-coding/skills/secure-coding/scripts/secscan.py .              # whole repo
+python3 secure-vibe-coding/skills/secure-coding/scripts/secscan.py --changed      # git changes only
+python3 secure-vibe-coding/skills/secure-coding/scripts/secscan.py src --json --fail-on medium
 ```
-Exit code is 1 when findings reach `--fail-on` (default `high`). Suppress a verified false positive with `securevibe: ignore[SV-NET-001] reason` on the same line or the line above.
+Exit code is 1 when findings reach `--fail-on` (default `high`). Suppress a verified false positive with `secure-vibe-coding: ignore[SV-NET-001] reason` on the same line or the line above.
 
 ## Choosing a tier for your model
 | Model / context | Use |

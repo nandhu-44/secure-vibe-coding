@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code SessionStart hook: put the SecureVibe core card in context for every session.
+"""Claude Code SessionStart hook: put the Secure Vibe Coding core card in context for every session.
 
 Skills load only when the model decides to invoke them, and smaller models often don't.
 This hook makes the core rules always-on (like AGENTS.md), while the full skills stay
@@ -13,13 +13,13 @@ from pathlib import Path
 SKILL = Path(__file__).resolve().parents[1] / "SKILL.md"
 START, END = "<!-- core-card:start -->", "<!-- core-card:end -->"
 
-PREAMBLE = """SecureVibe secure-coding rules are active for this session. Apply them to every code change. Build the
+PREAMBLE = """Secure Vibe Coding secure-coding rules are active for this session. Apply them to every code change. Build the
 requested feature with these rules; do not stall or refuse. Before coding, ask: who can call this, which input is
 untrusted, what asset is at stake, how could it be abused, and what limits (size/rate/count) apply. After writing code,
 re-check your diff once against the rules, fix violations, and tell the user in 1-3 lines which protections you added
-and which env vars/secrets they must set. For deeper guidance, invoke the matching skill: securevibe:secure-web (routes,
-APIs, auth, payments, uploads), securevibe:secure-lowlevel (C/C++/Rust unsafe), securevibe:secure-supply-chain-infra
-(deps, Docker, CI, IaC), securevibe:secure-ai-features (LLM/agents/MCP), securevibe:secure-review (audits).
+and which env vars/secrets they must set. For deeper guidance, invoke the matching skill: secure-vibe-coding:secure-web (routes,
+APIs, auth, payments, uploads), secure-vibe-coding:secure-lowlevel (C/C++/Rust unsafe), secure-vibe-coding:secure-supply-chain-infra
+(deps, Docker, CI, IaC), secure-vibe-coding:secure-ai-features (LLM/agents/MCP), secure-vibe-coding:secure-review (audits).
 """
 
 
@@ -37,5 +37,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as exc:  # never break session startup
-        print(f"securevibe session hook error (ignored): {exc}", file=sys.stderr)
+        print(f"secure-vibe-coding session hook error (ignored): {exc}", file=sys.stderr)
         sys.exit(0)

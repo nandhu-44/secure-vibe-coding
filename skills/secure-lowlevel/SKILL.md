@@ -5,7 +5,7 @@ license: Apache-2.0
 allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py *)
 metadata:
   version: "0.1.0"
-  pack: securevibe
+  pack: secure-vibe-coding
   standards: "SEI CERT C/C++, CWE Top 25, OpenSSF Compiler Hardening Guide, MISRA (subset)"
 ---
 

@@ -1,5 +1,5 @@
 {
-  "name": "securevibe",
+  "name": "secure-vibe-coding",
   "version": "0.1.0",
   "description": "Secure-by-default coding skills for AI agents: core rules, web/API, low-level C/C++/Rust, supply chain & infra, AI/LLM features, and security review, plus a dependency-free scanner and an auto-scan hook.",
   "author": {

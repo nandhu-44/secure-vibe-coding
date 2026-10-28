@@ -1,5 +1,5 @@
 {
-  "description": "SecureVibe: inject the core secure-coding card at session start; scan every file Claude writes or edits and block on HIGH findings.",
+  "description": "Secure Vibe Coding: inject the core secure-coding card at session start; scan every file Claude writes or edits and block on HIGH findings.",
   "hooks": {
     "PostToolUse": [
       {

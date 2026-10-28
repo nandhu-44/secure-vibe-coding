@@ -112,3 +112,9 @@ def test_rule_ids_unique_and_fields_present():
     for r in RULES:
         assert r["severity"] in secscan.SEVERITIES
         assert r["fix"] and r["title"] and r["patterns"]
+
+
+def test_new_suppression_prefix(tmp_path):
+    f = tmp_path / "s.py"
+    f.write_text("URL = 'http://legacy-printer.office.lan/'  # secure-vibe-coding: ignore[SV-NET-001] LAN device\n")
+    assert not secscan.scan_paths([str(f)], RULES)

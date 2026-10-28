@@ -1,4 +1,4 @@
-"""Stand-in 'agent' for testing the eval runner: writes secure code only when a SecureVibe pack is present."""
+"""Stand-in 'agent' for testing the eval runner: writes secure code only when a Secure Vibe Coding pack is present."""
 import shutil
 import sys
 from pathlib import Path

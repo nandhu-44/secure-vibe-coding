@@ -1,16 +1,16 @@
-SecureVibe
-Copyright 2026 nandhu-44 and SecureVibe contributors
+Secure Vibe Coding
+Copyright 2026 nandhu-44 and Secure Vibe Coding contributors
 
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-SecureVibe's guidance is original writing that is informed by, and maps to, the works below.
+Secure Vibe Coding's guidance is original writing that is informed by, and maps to, the works below.
 Where short material is quoted (standard category names and IDs, CERT rule titles, one
 benchmark prompt) or a document is adapted, the source is credited in place. The full
 bibliography is in docs/RESEARCH.md.
 
 - OWASP Top 10, ASVS, API Security Top 10, Top 10 for LLM Applications, Cheat Sheet Series
   (OWASP Foundation, CC BY-SA 4.0): https://owasp.org, https://genai.owasp.org
-  Only category identifiers/names are reproduced; control descriptions are SecureVibe's own.
+  Only category identifiers/names are reproduced; control descriptions are Secure Vibe Coding's own.
 - OpenSSF "Security-Focused Guide for AI Code Assistant Instructions" and
   "Compiler Options Hardening Guide for C and C++" (CC BY 4.0): https://best.openssf.org
   skills/secure-lowlevel/references/hardening-flags.md is adapted from the latter.

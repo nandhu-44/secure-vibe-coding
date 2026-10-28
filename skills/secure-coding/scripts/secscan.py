@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SecureVibe scanner: a fast, dependency-free security linter for AI-generated code.
+"""Secure Vibe Coding scanner: a fast, dependency-free security linter for AI-generated code.
 
 Usage:
   secscan.py [PATH ...] [--json] [--min-severity low|medium|high] [--fail-on high|medium|low|never]
@@ -11,7 +11,7 @@ unsafe C APIs, unpinned CI/containers, and executing LLM output. Regex rules liv
 rules/*.json. Python files also get an AST pass for fewer false positives.
 
 Suppress a reviewed false positive with a comment on the same or the previous line:
-  # securevibe: ignore[SV-NET-001] reason
+  # secure-vibe-coding: ignore[SV-NET-001] reason   (legacy "securevibe:" also accepted)
 Exit code: 1 if any finding is at or above --fail-on (default: high), else 0.
 This is a guardrail, not a proof of security. Pair with review and semgrep/CodeQL.
 """
@@ -71,7 +71,7 @@ COMMENT_STYLES = {
     "rs": SLASH_COMMENT, "php": SLASH_COMMENT,
     "html": re.compile(r"^\s*<!--"),
 }
-SUPPRESS_RE = re.compile(r"securevibe:\s*ignore(?:\[([A-Z0-9,\s-]+)\])?", re.I)
+SUPPRESS_RE = re.compile(r"(?:secure-vibe-coding|securevibe):\s*ignore(?:\[([A-Z0-9,\s-]+)\])?", re.I)
 
 
 @dataclass
@@ -85,7 +85,7 @@ class Finding:
     cwe: str = ""
     owasp: str = ""
     fix: str = ""
-    source: str = "securevibe"
+    source: str = "secure-vibe-coding"
     extra: dict = field(default_factory=dict)
 
 
@@ -275,7 +275,7 @@ def scan_file_level(display: str, text: str, lines: list[str], langs: set[str], 
     out = []
     if "dockerfile" in langs and re.search(r"(?im)^\s*FROM\s", text) and not re.search(r"(?im)^\s*USER\s+(?!root\b|0\b)\S", text):
         r = rules_by_id.get("SV-INF-002")
-        if r and "securevibe: ignore" not in text:
+        if r and not SUPPRESS_RE.search(text):
             out.append(make_finding(r, display, 1, lines[0] if lines else "", severity="low",
                                     title="Dockerfile has no non-root USER instruction"))
     if langs & {"py", "js", "go", "java", "rb", "php", "cs"} and not RATE_LIMIT_RE.search(text):
@@ -454,7 +454,7 @@ def render_text(findings: list[Finding], color: bool) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="SecureVibe security scanner for AI-generated code")
+    ap = argparse.ArgumentParser(description="Secure Vibe Coding security scanner for AI-generated code")
     ap.add_argument("paths", nargs="*", default=None)
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     ap.add_argument("--min-severity", choices=list(SEVERITIES), default="low")

@@ -5,7 +5,7 @@ license: Apache-2.0
 allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../secure-coding/scripts/secscan.py *)
 metadata:
   version: "0.1.0"
-  pack: securevibe
+  pack: secure-vibe-coding
   standards: "OWASP A03:2025, SLSA v1.1, OpenSSF Scorecard, CIS Docker/Kubernetes benchmarks, NIST SSDF"
 ---
 

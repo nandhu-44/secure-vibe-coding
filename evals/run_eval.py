@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure whether SecureVibe makes a coding agent write more secure code.
+"""Measure whether Secure Vibe Coding makes a coding agent write more secure code.
 
 For each scenario (evals/scenarios/*.json) and each mode, the runner:
   1. creates a fresh temp workdir (and installs the pack into it, for "with" modes),
