@@ -1,10 +1,32 @@
-# Secure Vibe Coding
+<p align="center"><img src=".claude-plugin/icon.png" alt="Secure Vibe Coding" width="120"></p>
+
+<h1 align="center">Secure Vibe Coding</h1>
+
+<p align="center">
+  <a href="https://www.skills.sh/nandhu-44/secure-vibe-coding"><img alt="skills.sh" src="https://img.shields.io/badge/skills.sh-secure--vibe--coding-111827?style=flat-square"></a>
+  <a href="#claude-code-plugin-skills--hooks"><img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square"></a>
+  <a href="https://github.com/nandhu-44/secure-vibe-coding/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/nandhu-44/secure-vibe-coding/ci.yml?branch=main&style=flat-square&label=CI"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square"></a>
+  <a href="skills/secure-web/references/owasp-top10-2025.md"><img alt="OWASP Top 10:2025" src="https://img.shields.io/badge/OWASP-Top%2010%3A2025-000000?style=flat-square"></a>
+  <a href="https://github.com/nandhu-44/secure-vibe-coding/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/nandhu-44/secure-vibe-coding?style=flat-square"></a>
+</p>
 
 **Secure-by-default skills for AI coding agents**, built so that older and open-weight models (Ollama, LM Studio, vLLM) can produce safe code too, not just frontier models.
 
 Secure Vibe Coding is a pack of [Agent Skills](https://code.claude.com/docs/en/skills) plus a dependency-free scanner and an auto-scan hook. It targets the flaws vibe-coded projects ship with: hardcoded secrets, `http://` endpoints, disabled TLS checks, missing authorization (IDOR), no rate limiting, string-built SQL, weak crypto, business-logic holes, unsafe C, hallucinated packages, open CI pipelines, and LLM features that execute model output.
 
 > Why not just tell the model "write secure code"? Because it measurably doesn't work. In SecureAgentBench ([Chen et al., 2025](https://arxiv.org/abs/2509.22097)), a generic security reminder produced **zero** improvement and increased failed runs. Secure Vibe Coding uses concrete rules, copyable secure patterns, and automated scanner feedback instead. See [docs/RESEARCH.md](docs/RESEARCH.md).
+
+## Quick install
+
+| Agent | Command |
+|---|---|
+| **Any agent (skills.sh)**: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, … | `npx skills add nandhu-44/secure-vibe-coding` |
+| **Claude Code plugin** (skills + hooks, recommended) | `claude plugin marketplace add nandhu-44/secure-vibe-coding`<br>`claude plugin install secure-vibe-coding@secure-vibe-coding` |
+| **Claude Code, from inside a session** | `/plugin marketplace add nandhu-44/secure-vibe-coding`<br>`/plugin install secure-vibe-coding@secure-vibe-coding` |
+| **Small local models** (Aider + Ollama) | `aider --read secure-vibe-coding/dist/AGENTS.compact.md` |
+
+Details and other agents are in [Install](#install).
 
 ## What's inside
 
@@ -25,21 +47,35 @@ Secure Vibe Coding is a pack of [Agent Skills](https://code.claude.com/docs/en/s
 
 ## Install
 
-### Any skills-compatible agent via [skills.sh](https://skills.sh)
+### Any skills-compatible agent via [skills.sh](https://www.skills.sh/nandhu-44/secure-vibe-coding)
+List the six skills:
 ```bash
-npx skills add nandhu-44/secure-vibe-coding            # pick agents and skills interactively
-npx skills add nandhu-44/secure-vibe-coding --list     # see the 6 skills
+npx skills add nandhu-44/secure-vibe-coding --list
 ```
-Install **all six** skills together. The domain skills call the scanner that ships inside `secure-coding`. Hooks are only included in the Claude Code plugin install below.
-
-### Claude Code (plugin: skills + hooks)
+Install them (an interactive prompt lets you pick agents and skills):
 ```bash
-git clone https://github.com/nandhu-44/secure-vibe-coding secure-vibe-coding
-claude --plugin-dir ./secure-vibe-coding          # try it in one session
+npx skills add nandhu-44/secure-vibe-coding
 ```
-Or install it permanently: `/plugin marketplace add nandhu-44/secure-vibe-coding`, then `/plugin install secure-vibe-coding@secure-vibe-coding`.
+Install **all six** skills together, because the domain skills call the scanner that ships inside `secure-coding`. The hooks (always-on rules and the post-edit scan) only come with the Claude Code plugin below.
 
-Skills only (no hook): copy `skills/*` into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project).
+### Claude Code plugin (skills + hooks)
+The plugin adds all six skills, the SessionStart hook that keeps the core rules always on, and the post-edit scanner hook. Add this repo as a marketplace, then install:
+```bash
+claude plugin marketplace add nandhu-44/secure-vibe-coding
+```
+```bash
+claude plugin install secure-vibe-coding@secure-vibe-coding
+```
+Inside a Claude Code session, the same thing is `/plugin marketplace add nandhu-44/secure-vibe-coding`, then `/plugin install secure-vibe-coding@secure-vibe-coding`. Get updates with `claude plugin update secure-vibe-coding@secure-vibe-coding`.
+
+To try it for one session without installing, clone the repo and load it directly:
+```bash
+git clone https://github.com/nandhu-44/secure-vibe-coding
+```
+```bash
+claude --plugin-dir ./secure-vibe-coding
+```
+Skills only, without the hooks: copy `skills/*` into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project).
 
 ### Codex CLI, OpenCode, Jules, Zed, Amp and other `AGENTS.md` readers
 Vendor the repo at `./secure-vibe-coding` (a git submodule or a copy) so reference links and the scanner resolve. Then:

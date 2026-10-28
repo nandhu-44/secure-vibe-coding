@@ -1,5 +1,6 @@
 {
   "name": "secure-vibe-coding",
+  "description": "Secure-by-default coding skills, scanner and hooks for AI coding agents.",
   "owner": {
     "name": "nandhu-44"
   },
